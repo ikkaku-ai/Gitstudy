@@ -8,17 +8,42 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State var isrecording = false
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("sakurai")
+        ZStack{
+            Color.yellow.edgesIgnoringSafeArea(.all)
+            
+            VStack{
+                Spacer()
+                
+                Button{
+                    isrecording = true
+                }label:{
+                    Text("録音")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .padding(.vertical, 15)
+                        .padding(.horizontal, 40)
+                        .background(Capsule().fill(Color.gray))
+                        .shadow(radius: 5)
+                }
+                .padding(.bottom, 50)
+                .alert("録音を開始しますか？", isPresented: $isrecording) {
+                    Button("いいえ"){
+                        isrecording = false
+                    }
+                    Button("はい"){
+                        print("録音を開始します！")
+                        isrecording = false
+                    }
+                }message: {
+                    Text("録音をすると記録に残ります。")
+                }
+            }
         }
-        .padding()
     }
 }
-
 #Preview {
     ContentView()
 }
