@@ -278,7 +278,7 @@ struct MascotImageView: View {
                 .foregroundColor(.red) // 赤色で表示
                 .padding(.horizontal, 8) // 背景の横パディング
                 .padding(.vertical, 4)// 背景の縦パディング
-                .background(Capsule().fill(Color.black.opacity(0.6))) // 半透明の黒い背景
+                .background(Capsule().fill(Color.black.opacity(0.6)))
                 .offset(y: -30) // Y軸を負の値にして上に移動 (この値はプレビューで調整してください)
         }
     }
