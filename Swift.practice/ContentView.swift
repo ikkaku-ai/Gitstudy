@@ -11,7 +11,6 @@ import SwiftUI
 struct DisplayMascot: Identifiable {
     let id = UUID()
     let imageName: String
-    let displayCount: Int
 }
 
 // MARK: - 新しく追加するマスコットの行を表示するView
