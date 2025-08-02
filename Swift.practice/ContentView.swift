@@ -333,6 +333,12 @@ struct ContentView: View {
                         audioRecorder.stopRecording()
                         count += 1
                         showMascot.append(DisplayMascot(imageName: "drownDog", displayCount: count))
+                        
+                        // 録音ファイルのURLを取得してログに出力
+                        if let recordingURL = audioRecorder.recordingURL {
+                            print("録音ファイルのURL: \(recordingURL)")
+                            print("録音ファイルのパス: \(recordingURL.path)")
+                        }
                     } else {
                         isrecording = true
                     }
