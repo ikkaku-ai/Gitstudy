@@ -526,8 +526,7 @@ struct ContentView: View {
                         showMascot.append(DisplayMascot(
                             imageName: randomImageName,
                             displayCount: count,
-                            recordingURL: audioRecorder.recordingURL,
-                            displayMode: .image
+                            recordingURL: audioRecorder.recordingURL
                         ))
                         
                         // 録音ファイルのURLを取得してログに出力
