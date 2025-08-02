@@ -3,10 +3,12 @@ import Combine
 
 class AudioRecorder: NSObject, ObservableObject {
     @Published var isRecording = false
+    @Published var isPlaying = false
     @Published var audioLevels: [Float] = []
     @Published var recordingURL: URL?
     
     private var audioRecorder: AVAudioRecorder?
+    private var audioPlayer: AVAudioPlayer?
     private var timer: Timer?
     
     override init() {
@@ -97,6 +99,24 @@ class AudioRecorder: NSObject, ObservableObject {
             return (level - minDb) / (maxDb - minDb)
         }
     }
+    
+    func playRecording(from url: URL) {
+        do {
+            audioPlayer = try AVAudioPlayer(contentsOf: url)
+            audioPlayer?.delegate = self
+            audioPlayer?.play()
+            isPlaying = true
+            print("再生を開始しました: \(url.path)")
+        } catch {
+            print("再生の開始に失敗しました: \(error.localizedDescription)")
+        }
+    }
+    
+    func stopPlaying() {
+        audioPlayer?.stop()
+        isPlaying = false
+        print("再生を停止しました")
+    }
 }
 
 extension AudioRecorder: AVAudioRecorderDelegate {
@@ -106,5 +126,12 @@ extension AudioRecorder: AVAudioRecorderDelegate {
         } else {
             print("録音が失敗しました")
         }
+    }
+}
+
+extension AudioRecorder: AVAudioPlayerDelegate {
+    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        isPlaying = false
+        print("再生が終了しました")
     }
 }
