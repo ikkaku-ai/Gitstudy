@@ -36,6 +36,7 @@ struct DisplayMascot: Identifiable {
     let imageName: String
     let displayCount: Int
     let recordingURL: URL? // 音声録音機能を維持
+    let transcriptionText: String // 文字起こし結果
     let displayMode: DisplayMode = .image // 表示モード
     
     enum DisplayMode {
@@ -375,24 +376,12 @@ struct MascotRowView: View {
                 let oddMascot = sortedMascots.first(where: { $0.displayCount % 2 == 1 })
                 let evenMascot = sortedMascots.first(where: { $0.displayCount % 2 == 0 })
 
-                if oddMascot != nil && evenMascot != nil {
-                    // 奇数と偶数の両方のマスコットが存在する場合（完全なペア）
-                    MascotImageView(mascot: oddMascot!, speechRecognizer: speechRecognizer)
-                        .environmentObject(audioRecorder) // 奇数は左
-                    Spacer().frame(width: 20) // 画像間の隙間
-                    MascotImageView(mascot: evenMascot!, speechRecognizer: speechRecognizer)
-                        .environmentObject(audioRecorder) // 偶数は右
-                } else if let singleMascot = oddMascot ?? evenMascot {
-                    // マスコットが1つだけの場合（奇数または偶数）は中央に配置
-                    Spacer()
-                    
-                    MascotImageView(mascot: singleMascot, speechRecognizer: speechRecognizer)
+                // 横に1つずつ表示
+                ForEach(sortedMascots, id: \.id) { mascot in
+                    MascotImageView(mascot: mascot, speechRecognizer: speechRecognizer)
                         .environmentObject(audioRecorder)
-                    Spacer()
-                    } else {
-                        // このケースは通常発生しないはず
-                        EmptyView()
-                    }
+                        .padding(.horizontal, 20)
+                }
                 }
         // 行間の隙間 (2行目以降に適用)
         .padding(.vertical, (rowIndex == 0) ? 0 : 10)
@@ -413,12 +402,12 @@ struct MascotImageView: View {
                 // UIfix: 画像表示
                 Image(mascot.imageName)
                     .resizable()
-                    .frame(width: 150, height: 150)
+                    .frame(width: 250, height: 250)
                     .shadow(radius: 10)
             } else {
                 // main: 図形描画
                 DrawnDogMascotView(speechRecognizer: speechRecognizer)
-                    .frame(width: 150, height: 150)
+                    .frame(width: 250, height: 250)
                     .shadow(radius: 10)
             }
             
@@ -450,18 +439,27 @@ struct MascotImageView: View {
                 .offset(y: -75) // DrawnDogMascotViewの中央付近に配置
             }
             
-            // MARK: - 要約とカウントの表示
-            VStack(spacing: 0) {
-                Text("要約 \(mascot.displayCount)")
-                    .font(.caption)
-                    .fontWeight(.bold)
-                    .foregroundColor(.black)
+            // MARK: - 文字起こし結果の表示
+            VStack(alignment: .leading, spacing: 4) {
+                if !mascot.transcriptionText.isEmpty {
+                    Text(mascot.transcriptionText)
+                        .font(.caption)
+                        .foregroundColor(.black)
+                        .lineLimit(3)
+                        .multilineTextAlignment(.leading)
+                } else {
+                    Text("文字起こし中...")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .italic()
+                }
             }
             .padding(.vertical, 8)
-            .padding(.horizontal, 10)
-            .frame(maxWidth: 100)
-            .background(Color(.systemGray5))
+            .padding(.horizontal, 12)
+            .frame(maxWidth: 250)
+            .background(Color.white.opacity(0.9))
             .cornerRadius(8)
+            .shadow(radius: 2)
             .offset(y: -10)
         }
     }
@@ -523,11 +521,13 @@ struct ContentView: View {
                         
                         // ランダムに画像を選択
                         let randomImageName = mascotImageNames.randomElement() ?? "1"
-                        showMascot.append(DisplayMascot(
+                        let newMascot = DisplayMascot(
                             imageName: randomImageName,
                             displayCount: count,
-                            recordingURL: audioRecorder.recordingURL
-                        ))
+                            recordingURL: audioRecorder.recordingURL,
+                            transcriptionText: ""
+                        )
+                        showMascot.append(newMascot)
                         
                         // 録音ファイルのURLを取得してログに出力
                         if let recordingURL = audioRecorder.recordingURL {
@@ -539,6 +539,18 @@ struct ContentView: View {
                                 let authorized = await speechRecognizer.requestAuthorization()
                                 if authorized {
                                     await speechRecognizer.transcribeAudio(from: recordingURL)
+                                    
+                                    // 文字起こし完了後、マスコットの文字起こし結果を更新
+                                    if let index = showMascot.lastIndex(where: { $0.recordingURL == recordingURL }) {
+                                        let updatedMascot = DisplayMascot(
+                                            imageName: showMascot[index].imageName,
+                                            displayCount: showMascot[index].displayCount,
+                                            recordingURL: showMascot[index].recordingURL,
+                                            transcriptionText: speechRecognizer.transcriptionResult.isEmpty ? 
+                                                "文字起こしできませんでした" : speechRecognizer.transcriptionResult
+                                        )
+                                        showMascot[index] = updatedMascot
+                                    }
                                 }
                             }
                         }
