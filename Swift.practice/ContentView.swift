@@ -84,11 +84,72 @@ struct Sparkle: Shape {
 // MARK: - 図形で描画された犬のマスコットキャラクター本体
 /// 複数の図形を組み合わせて犬のマスコットを描画するView
 struct DrawnDogMascotView: View {
+    @ObservedObject var speechRecognizer: SpeechRecognizer
+    @State private var showTranscriptionResult = false
+    
     var body: some View {
         // GeometryReaderを使用して、親ビューのサイズに基づいて内部の描画をスケーリング
         // これにより、MascotImageViewで指定するframeサイズに柔軟に対応できます
         GeometryReader { geometry in
             ZStack {
+                // MARK: - 文字起こし状態表示（上部に重ねて表示）
+                VStack {
+                    HStack {
+                        Spacer()
+                        
+                        if speechRecognizer.isTranscribing {
+                            VStack {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .blue))
+                                    .scaleEffect(0.8)
+                                
+                                Text("文字起こし中...")
+                                    .font(.caption2)
+                                    .foregroundColor(.blue)
+                            }
+                            .padding(8)
+                            .background(Color.white.opacity(0.9))
+                            .cornerRadius(12)
+                            .shadow(radius: 3)
+                        } else if !speechRecognizer.transcriptionResult.isEmpty {
+                            Button(action: {
+                                showTranscriptionResult.toggle()
+                            }) {
+                                VStack {
+                                    Image(systemName: "text.bubble")
+                                        .foregroundColor(.green)
+                                    Text("結果")
+                                        .font(.caption2)
+                                        .foregroundColor(.green)
+                                }
+                            }
+                            .padding(8)
+                            .background(Color.white.opacity(0.9))
+                            .cornerRadius(12)
+                            .shadow(radius: 3)
+                        } else if let errorMessage = speechRecognizer.errorMessage, !errorMessage.isEmpty {
+                            Button(action: {
+                                showTranscriptionResult.toggle()
+                            }) {
+                                VStack {
+                                    Image(systemName: "exclamationmark.triangle")
+                                        .foregroundColor(.orange)
+                                    Text("エラー")
+                                        .font(.caption2)
+                                        .foregroundColor(.orange)
+                                }
+                            }
+                            .padding(8)
+                            .background(Color.white.opacity(0.9))
+                            .cornerRadius(12)
+                            .shadow(radius: 3)
+                        }
+                    }
+                    
+                    Spacer()
+                }
+                .frame(width: geometry.size.width, height: geometry.size.height)
+                .zIndex(1)
                 // 犬の背後にある大きなピンクのハート
                 Heart()
                     .fill(Color(red: 1.0, green: 0.8, blue: 0.9)) // 薄いピンク
@@ -225,6 +286,79 @@ struct DrawnDogMascotView: View {
             .scaleEffect(min(geometry.size.width, geometry.size.height) / 250.0)
             .position(x: geometry.size.width / 2, y: geometry.size.height / 2) // 中央に配置
         }
+        .sheet(isPresented: $showTranscriptionResult) {
+            TranscriptionResultView(
+                transcriptionText: speechRecognizer.transcriptionResult,
+                errorMessage: speechRecognizer.errorMessage
+            )
+        }
+    }
+}
+
+// MARK: - 文字起こし結果表示View
+struct TranscriptionResultView: View {
+    let transcriptionText: String
+    let errorMessage: String?
+    @Environment(\.presentationMode) var presentationMode
+    
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    if let error = errorMessage {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("エラー")
+                                .font(.headline)
+                                .foregroundColor(.red)
+                            
+                            Text(error)
+                                .font(.body)
+                                .foregroundColor(.secondary)
+                                .padding()
+                                .background(Color(.systemGray6))
+                                .cornerRadius(8)
+                        }
+                    }
+                    
+                    if !transcriptionText.isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("文字起こし結果")
+                                .font(.headline)
+                            
+                            Text(transcriptionText)
+                                .font(.body)
+                                .lineSpacing(4)
+                                .textSelection(.enabled)
+                                .padding()
+                                .background(Color(.systemGray6))
+                                .cornerRadius(8)
+                        }
+                    }
+                    
+                    if transcriptionText.isEmpty && errorMessage == nil {
+                        VStack(spacing: 16) {
+                            Image(systemName: "text.bubble")
+                                .font(.system(size: 50))
+                                .foregroundColor(.gray)
+                            
+                            Text("文字起こし結果がありません")
+                                .font(.title3)
+                                .foregroundColor(.gray)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
+                    
+                    Spacer()
+                }
+                .padding()
+            }
+            .navigationTitle("文字起こし")
+            .navigationBarItems(
+                trailing: Button("完了") {
+                    presentationMode.wrappedValue.dismiss()
+                }
+            )
+        }
     }
 }
 
@@ -233,6 +367,7 @@ struct MascotRowView: View {
     let mascotsInRow: [DisplayMascot] // この行に表示するマスコットの配列
     let rowIndex: Int // 行のインデックス（パディング調整用）
     let audioRecorder: AudioRecorder
+    let speechRecognizer: SpeechRecognizer
 
     var body: some View {
         HStack {
@@ -243,16 +378,16 @@ struct MascotRowView: View {
 
                 if oddMascot != nil && evenMascot != nil {
                     // 奇数と偶数の両方のマスコットが存在する場合（完全なペア）
-                    MascotImageView(mascot: oddMascot!)
+                    MascotImageView(mascot: oddMascot!, speechRecognizer: speechRecognizer)
                         .environmentObject(audioRecorder) // 奇数は左
                     Spacer().frame(width: 20) // 画像間の隙間
-                    MascotImageView(mascot: evenMascot!)
+                    MascotImageView(mascot: evenMascot!, speechRecognizer: speechRecognizer)
                         .environmentObject(audioRecorder) // 偶数は右
                 } else if let singleMascot = oddMascot ?? evenMascot {
                     // マスコットが1つだけの場合（奇数または偶数）は中央に配置
                     Spacer()
                     
-                    MascotImageView(mascot: singleMascot)
+                    MascotImageView(mascot: singleMascot, speechRecognizer: speechRecognizer)
                         .environmentObject(audioRecorder)
                     Spacer()
                     } else {
@@ -268,13 +403,14 @@ struct MascotRowView: View {
 // MARK: - 個々のマスコット画像を表示するヘルパーView
 struct MascotImageView: View {
     let mascot: DisplayMascot
+    let speechRecognizer: SpeechRecognizer
     @EnvironmentObject var audioRecorder: AudioRecorder
     @State private var isShowingPlayButton = false
     
     var body: some View {
         ZStack(alignment: .bottom) { // コンテンツを下揃えにする
             // MARK: - ここでDrawnDogMascotViewを使用
-            DrawnDogMascotView()
+            DrawnDogMascotView(speechRecognizer: speechRecognizer)
                 .frame(width: 150, height: 150) // マスコットの表示サイズを調整
                 .shadow(radius: 10) // 影
                 .onTapGesture {
@@ -321,6 +457,7 @@ struct ContentView: View {
     @State private var count = 0
     @State private var showMascot: [DisplayMascot] = [] // 表示するマスコットのリスト
     @StateObject private var audioRecorder = AudioRecorder()
+    @StateObject private var speechRecognizer = SpeechRecognizer()
 
     var body: some View {
         ZStack {
@@ -344,7 +481,7 @@ struct ContentView: View {
                         // 各行のマスコットを displayCount でソートして MascotRowView に渡す
                         // これにより、MascotRowView 内での leftMascot/rightMascot の判定が正しく行われる
                         let mascotsInCurrentRow = groupedMascots[rowIndex]!.sorted { $0.displayCount < $1.displayCount }
-                        MascotRowView(mascotsInRow: mascotsInCurrentRow, rowIndex: rowIndex, audioRecorder: audioRecorder)
+                        MascotRowView(mascotsInRow: mascotsInCurrentRow, rowIndex: rowIndex, audioRecorder: audioRecorder, speechRecognizer: speechRecognizer)
                     }
                 }
                 .frame(maxHeight: .infinity) // ScrollViewがVStackの残りのスペースを埋めるように
@@ -369,6 +506,14 @@ struct ContentView: View {
                         if let recordingURL = audioRecorder.recordingURL {
                             print("録音ファイルのURL: \(recordingURL)")
                             print("録音ファイルのパス: \(recordingURL.path)")
+                            
+                            // 文字起こし開始
+                            Task {
+                                let authorized = await speechRecognizer.requestAuthorization()
+                                if authorized {
+                                    await speechRecognizer.transcribeAudio(from: recordingURL)
+                                }
+                            }
                         }
                     } else {
                         isrecording = true
