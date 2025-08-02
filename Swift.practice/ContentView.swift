@@ -9,7 +9,7 @@ import SwiftUI
 
 // MARK: - Color Extension for Custom Colors
 // この部分は、あなたのプロジェクト内のどこかのファイルに一度だけ定義してください
-extension Color {
+extension Color { 
     static let creamyWhite = Color(red: 0.98, green: 0.98, blue: 0.94)
 
     init(hex: String) {
