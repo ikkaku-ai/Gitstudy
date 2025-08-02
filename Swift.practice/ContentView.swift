@@ -42,6 +42,7 @@ struct DisplayMascot: Identifiable {
     let id = UUID()
     let imageName: String
     let displayCount: Int
+    let recordingURL: URL?
 }
 
 // MARK: - カスタムシェイプの定義
@@ -231,6 +232,7 @@ struct DrawnDogMascotView: View {
 struct MascotRowView: View {
     let mascotsInRow: [DisplayMascot] // この行に表示するマスコットの配列
     let rowIndex: Int // 行のインデックス（パディング調整用）
+    let audioRecorder: AudioRecorder
 
     var body: some View {
         HStack {
@@ -241,14 +243,17 @@ struct MascotRowView: View {
 
                 if oddMascot != nil && evenMascot != nil {
                     // 奇数と偶数の両方のマスコットが存在する場合（完全なペア）
-                    MascotImageView(mascot: oddMascot!) // 奇数は左
+                    MascotImageView(mascot: oddMascot!)
+                        .environmentObject(audioRecorder) // 奇数は左
                     Spacer().frame(width: 20) // 画像間の隙間
-                    MascotImageView(mascot: evenMascot!) // 偶数は右
+                    MascotImageView(mascot: evenMascot!)
+                        .environmentObject(audioRecorder) // 偶数は右
                 } else if let singleMascot = oddMascot ?? evenMascot {
                     // マスコットが1つだけの場合（奇数または偶数）は中央に配置
                     Spacer()
                     
                     MascotImageView(mascot: singleMascot)
+                        .environmentObject(audioRecorder)
                     Spacer()
                     } else {
                         // このケースは通常発生しないはず
@@ -263,6 +268,8 @@ struct MascotRowView: View {
 // MARK: - 個々のマスコット画像を表示するヘルパーView
 struct MascotImageView: View {
     let mascot: DisplayMascot
+    @EnvironmentObject var audioRecorder: AudioRecorder
+    @State private var isShowingPlayButton = false
     
     var body: some View {
         ZStack(alignment: .bottom) { // コンテンツを下揃えにする
@@ -270,6 +277,30 @@ struct MascotImageView: View {
             DrawnDogMascotView()
                 .frame(width: 150, height: 150) // マスコットの表示サイズを調整
                 .shadow(radius: 10) // 影
+                .onTapGesture {
+                    if mascot.recordingURL != nil {
+                        isShowingPlayButton.toggle()
+                    }
+                }
+            
+            // 再生ボタン
+            if isShowingPlayButton, let recordingURL = mascot.recordingURL {
+                Button(action: {
+                    if audioRecorder.isPlaying {
+                        audioRecorder.stopPlaying()
+                    } else {
+                        audioRecorder.playRecording(from: recordingURL)
+                    }
+                }) {
+                    Image(systemName: audioRecorder.isPlaying ? "stop.circle.fill" : "play.circle.fill")
+                        .resizable()
+                        .frame(width: 50, height: 50)
+                        .foregroundColor(.blue)
+                        .background(Circle().fill(Color.white))
+                        .shadow(radius: 5)
+                }
+                .offset(y: -75) // DrawnDogMascotViewの中央付近に配置
+            }
             // MARK: - ここにカウントの数字を表示
             //ここにAI要約を書くようにする
             Text("\(mascot.displayCount)") // displayCountを表示
@@ -289,6 +320,7 @@ struct ContentView: View {
     @State var isrecording = false
     @State private var count = 0
     @State private var showMascot: [DisplayMascot] = [] // 表示するマスコットのリスト
+    @StateObject private var audioRecorder = AudioRecorder()
 
     var body: some View {
         ZStack {
@@ -312,7 +344,7 @@ struct ContentView: View {
                         // 各行のマスコットを displayCount でソートして MascotRowView に渡す
                         // これにより、MascotRowView 内での leftMascot/rightMascot の判定が正しく行われる
                         let mascotsInCurrentRow = groupedMascots[rowIndex]!.sorted { $0.displayCount < $1.displayCount }
-                        MascotRowView(mascotsInRow: mascotsInCurrentRow, rowIndex: rowIndex)
+                        MascotRowView(mascotsInRow: mascotsInCurrentRow, rowIndex: rowIndex, audioRecorder: audioRecorder)
                     }
                 }
                 .frame(maxHeight: .infinity) // ScrollViewがVStackの残りのスペースを埋めるように
@@ -320,16 +352,35 @@ struct ContentView: View {
 
                 Spacer() // これにより、ボタンは画面下部に固定されます
 
+                // 録音中の波形表示
+                if audioRecorder.isRecording {
+                    WaveformView(audioLevels: audioRecorder.audioLevels)
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 20)
+                }
+
                 Button {
-                    isrecording = true
+                    if audioRecorder.isRecording {
+                        audioRecorder.stopRecording()
+                        count += 1
+                        showMascot.append(DisplayMascot(imageName: "drownDog", displayCount: count, recordingURL: audioRecorder.recordingURL))
+                        
+                        // 録音ファイルのURLを取得してログに出力
+                        if let recordingURL = audioRecorder.recordingURL {
+                            print("録音ファイルのURL: \(recordingURL)")
+                            print("録音ファイルのパス: \(recordingURL.path)")
+                        }
+                    } else {
+                        isrecording = true
+                    }
                 } label: {
-                    Text("録音")
+                    Text(audioRecorder.isRecording ? "停止" : "録音")
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(.white)
                         .padding(.vertical, 15)
                         .padding(.horizontal, 40)
-                        .background(Capsule().fill(Color.gray))
+                        .background(Capsule().fill(audioRecorder.isRecording ? Color.red : Color.gray))
                         .shadow(radius: 5)
                 }
                 .padding(.bottom, 40)
@@ -340,11 +391,7 @@ struct ContentView: View {
                     Button("はい"){
                         print("録音を開始します！")
                         isrecording = false
-                        count += 1 // 録音回数をインクリメント
-
-                        // 新しいマスコットをリストに追加
-                        // "heartdog" は Assets.xcassets に入っている画像名に置き換えてください
-                        showMascot.append(DisplayMascot(imageName: "drownDog", displayCount: count))
+                        audioRecorder.startRecording()
                     }
                 }message: {
                     Text("録音をすると記録に残ります。")
