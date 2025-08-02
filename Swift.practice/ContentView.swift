@@ -289,6 +289,7 @@ struct ContentView: View {
     @State var isrecording = false
     @State private var count = 0
     @State private var showMascot: [DisplayMascot] = [] // 表示するマスコットのリスト
+    @StateObject private var audioRecorder = AudioRecorder()
 
     var body: some View {
         ZStack {
@@ -320,16 +321,29 @@ struct ContentView: View {
 
                 Spacer() // これにより、ボタンは画面下部に固定されます
 
+                // 録音中の波形表示
+                if audioRecorder.isRecording {
+                    WaveformView(audioLevels: audioRecorder.audioLevels)
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 20)
+                }
+
                 Button {
-                    isrecording = true
+                    if audioRecorder.isRecording {
+                        audioRecorder.stopRecording()
+                        count += 1
+                        showMascot.append(DisplayMascot(imageName: "drownDog", displayCount: count))
+                    } else {
+                        isrecording = true
+                    }
                 } label: {
-                    Text("録音")
+                    Text(audioRecorder.isRecording ? "停止" : "録音")
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(.white)
                         .padding(.vertical, 15)
                         .padding(.horizontal, 40)
-                        .background(Capsule().fill(Color.gray))
+                        .background(Capsule().fill(audioRecorder.isRecording ? Color.red : Color.gray))
                         .shadow(radius: 5)
                 }
                 .padding(.bottom, 40)
@@ -340,11 +354,7 @@ struct ContentView: View {
                     Button("はい"){
                         print("録音を開始します！")
                         isrecording = false
-                        count += 1 // 録音回数をインクリメント
-
-                        // 新しいマスコットをリストに追加
-                        // "heartdog" は Assets.xcassets に入っている画像名に置き換えてください
-                        showMascot.append(DisplayMascot(imageName: "drownDog", displayCount: count))
+                        audioRecorder.startRecording()
                     }
                 }message: {
                     Text("録音をすると記録に残ります。")
