@@ -45,11 +45,17 @@ class SpeechRecognizer: ObservableObject {
         
         recognitionRequest.shouldReportPartialResults = false
         
-        do {
-            let result = try await speechRecognizer.recognitionTask(with: recognitionRequest).result
-            transcriptionResult = result.bestTranscription.formattedString
-        } catch {
-            errorMessage = "文字起こしに失敗しました: \(error.localizedDescription)"
+        speechRecognizer.recognitionTask(with: recognitionRequest) { result, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    self.errorMessage = "文字起こしに失敗しました: \(error.localizedDescription)"
+                } else if let result = result {
+                    if result.isFinal {
+                        self.transcriptionResult = result.bestTranscription.formattedString
+                    }
+                }
+                self.isTranscribing = false
+            }
         }
         
         isTranscribing = false
