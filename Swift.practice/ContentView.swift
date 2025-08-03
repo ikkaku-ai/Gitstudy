@@ -108,37 +108,47 @@ struct MascotImageView: View {
 // MARK: - ContentView
 struct ContentView: View {
     @State private var selectedTab: NavigationTab = .home
+    @State private var showRecordingView = false
     @StateObject private var mascotData = MascotDataModel()
     @StateObject private var audioRecorder = AudioRecorder()
     @StateObject private var speechRecognizer = SpeechRecognizer()
     
     var body: some View {
-        TabView(selection: $selectedTab) {
-            HomeView()
-                .tabItem {
-                    Label(NavigationTab.home.displayName, systemImage: NavigationTab.home.symbolName)
-                }
-                .tag(NavigationTab.home)
-                .environmentObject(mascotData)
-                .environmentObject(audioRecorder)
-                .environmentObject(speechRecognizer)
+        ZStack {
+            TabView(selection: $selectedTab) {
+                HomeView()
+                    .tabItem {
+                        Label(NavigationTab.home.displayName, systemImage: NavigationTab.home.symbolName)
+                    }
+                    .tag(NavigationTab.home)
+                    .environmentObject(mascotData)
+                    .environmentObject(audioRecorder)
+                    .environmentObject(speechRecognizer)
+                
+                TutorialView()
+                    .tabItem {
+                        Label(NavigationTab.tutorial.displayName, systemImage: NavigationTab.tutorial.symbolName)
+                    }
+                    .tag(NavigationTab.tutorial)
+            }
+            .accentColor(.blue)
             
-            RecordingView()
-                .tabItem {
-                    Label(NavigationTab.recording.displayName, systemImage: NavigationTab.recording.symbolName)
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    FloatingRecordButton(showRecordingView: $showRecordingView)
+                        .padding(.trailing, 20)
+                        .padding(.bottom, 100)
                 }
-                .tag(NavigationTab.recording)
-                .environmentObject(mascotData)
-                .environmentObject(audioRecorder)
-                .environmentObject(speechRecognizer)
-            
-            TutorialView()
-                .tabItem {
-                    Label(NavigationTab.tutorial.displayName, systemImage: NavigationTab.tutorial.symbolName)
-                }
-                .tag(NavigationTab.tutorial)
+            }
         }
-        .accentColor(.blue)
+        .sheet(isPresented: $showRecordingView) {
+            RecordingView(isPresented: $showRecordingView)
+                .environmentObject(mascotData)
+                .environmentObject(audioRecorder)
+                .environmentObject(speechRecognizer)
+        }
     }
 }
 

@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct RecordingView: View {
+    @Binding var isPresented: Bool
     @State private var showRecordingAlert = false
     @EnvironmentObject var mascotData: MascotDataModel
     @EnvironmentObject var audioRecorder: AudioRecorder
@@ -71,6 +72,9 @@ struct RecordingView: View {
             }
             .navigationTitle("録音")
             .navigationBarTitleDisplayMode(.large)
+            .navigationBarItems(trailing: Button("閉じる") {
+                isPresented = false
+            })
             .alert("録音を開始しますか？", isPresented: $showRecordingAlert) {
                 Button("キャンセル", role: .cancel) {
                     showRecordingAlert = false
@@ -87,6 +91,7 @@ struct RecordingView: View {
     
     private func stopRecordingAndProcess() {
         audioRecorder.stopRecording()
+        isPresented = false
         
         let randomImageName = mascotImageNames.randomElement() ?? "1"
         mascotData.addMascot(
