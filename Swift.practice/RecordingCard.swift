@@ -23,13 +23,6 @@ struct RecordingCard: View {
                 
                 Spacer()
                 
-                // マスコット画像（小さめにして目立たなくする）
-                Image(mascot.imageName)
-                    .resizable()
-                    .frame(width: 50, height: 50)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .opacity(0.7)
-                
                 // 再生ボタンを大きく目立たせる
                 Button(action: {
                     if let url = mascot.recordingURL {
