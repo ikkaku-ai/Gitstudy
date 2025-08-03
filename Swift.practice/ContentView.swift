@@ -112,11 +112,47 @@ struct ContentView: View {
     @State private var showMascot: [DisplayMascot] = [] // 表示するマスコットのリスト
     @StateObject private var audioRecorder = AudioRecorder()
     @StateObject private var speechRecognizer = SpeechRecognizer()
+    // 現在の年を取得する
+    private var currentYear: Int {
+        Calendar.current.component(.year, from: Date())
+    }
 
     // 画像アセット名の配列
     private let mascotImageNames: [String] = ["1", "2", "3", "4"]
     
     var body: some View {
+        
+        VStack {
+
+            VStack(alignment: .leading, spacing: 0) {
+                // 年の表示を一番上に移動
+                Text("\(currentYear)年")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .padding(.vertical, 8)
+                    .padding(.horizontal)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(.ultraThinMaterial)
+
+                // 月の横スクロールバーを年の下に移動
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 20) {
+                        ForEach(1..<13) { month in
+                            Text("\(month)月")
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 5)
+                                .background(month == 8 ? .blue : Color.clear)
+                                .foregroundColor(month == 8 ? .white : .primary)
+                                .cornerRadius(20)
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+                .frame(height: 50)
+                .background(.ultraThinMaterial)
+            }
+        }
+        
         ZStack {
             // UIfix の水色背景を採用
             Color(red: 0.8, green: 0.95, blue: 1.0).edgesIgnoringSafeArea(.all)
