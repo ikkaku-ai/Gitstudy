@@ -10,31 +10,41 @@ struct HomeView: View {
             ZStack {
                 Color(red: 0.8, green: 0.95, blue: 1.0).edgesIgnoringSafeArea(.all)
                 
-                VStack {
+                VStack(spacing: 0) {
                     if mascotData.mascots.isEmpty {
                         VStack(spacing: 20) {
                             Image(systemName: "mic.circle.fill")
                                 .font(.system(size: 80))
                                 .foregroundColor(.gray.opacity(0.5))
                             
-                            Text("録音タブから音声を録音してみましょう")
+                            Text("録音ボタンから音声を録音してみましょう")
                                 .font(.headline)
                                 .foregroundColor(.gray)
                         }
                         .frame(maxHeight: .infinity)
                     } else {
-                        ScrollView {
-                            let groupedMascots = Dictionary(grouping: mascotData.mascots) { mascot in
-                                (mascotData.mascots.count - mascot.displayCount) / 2
-                            }
+                        // 録音カードの横スクロール
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("録音履歴")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .padding(.horizontal, 20)
+                                .padding(.top, 20)
                             
-                            ForEach(groupedMascots.keys.sorted(), id: \.self) { rowIndex in
-                                let mascotsInCurrentRow = groupedMascots[rowIndex]!.sorted { $0.displayCount < $1.displayCount }
-                                MascotRowView(mascotsInRow: mascotsInCurrentRow, rowIndex: rowIndex, audioRecorder: audioRecorder, speechRecognizer: speechRecognizer)
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 16) {
+                                    ForEach(mascotData.mascots.reversed()) { mascot in
+                                        RecordingCard(mascot: mascot)
+                                            .environmentObject(audioRecorder)
+                                    }
+                                }
+                                .padding(.horizontal, 20)
+                                .padding(.bottom, 10)
                             }
+                            .frame(height: 220)
                         }
-                        .frame(maxHeight: .infinity)
-                        .padding(.top, 20)
+                        
+                        Spacer()
                     }
                 }
             }
