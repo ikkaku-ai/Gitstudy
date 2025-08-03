@@ -2,7 +2,7 @@ import SwiftUI
 
 struct RecordingDetailView: View {
     let recording: RecordingEntry
-    @ObservedObject var audioRecorder: AudioRecorder
+    @EnvironmentObject var audioRecorder: AudioRecorder
     @Environment(\.presentationMode) var presentationMode
     @State private var isExpanded = false
     
@@ -166,8 +166,8 @@ struct RecordingDetailView_Previews: PreviewProvider {
                 fileName: "sample.m4a",
                 transcription: "これはサンプルの文字起こし結果です。実際の録音内容がここに表示されます。長い文章の場合は折りたたみ表示になります。",
                 duration: 120
-            ),
-            audioRecorder: AudioRecorder()
+            )
         )
+        .environmentObject(AudioRecorder())
     }
 }

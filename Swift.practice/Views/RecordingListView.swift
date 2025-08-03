@@ -28,14 +28,11 @@ struct RecordingListView: View {
                 }
             }
             .sheet(isPresented: $showingRecordingSheet) {
-                RecordingView(
-                    audioRecorder: audioRecorder,
-                    speechRecognizer: speechRecognizer,
-                    dataManager: dataManager
-                )
+                RecordingSheetView(dataManager: dataManager)
             }
             .sheet(item: $selectedRecording) { recording in
-                RecordingDetailView(recording: recording, audioRecorder: audioRecorder)
+                RecordingDetailView(recording: recording)
+                    .environmentObject(audioRecorder)
             }
         }
     }
@@ -92,9 +89,9 @@ struct RecordingRowView: View {
     }
 }
 
-struct RecordingView: View {
-    @ObservedObject var audioRecorder: AudioRecorder
-    @ObservedObject var speechRecognizer: SpeechRecognizer
+struct RecordingSheetView: View {
+    @StateObject private var audioRecorder = AudioRecorder()
+    @StateObject private var speechRecognizer = SpeechRecognizer()
     @ObservedObject var dataManager: RecordingDataManager
     @Environment(\.presentationMode) var presentationMode
     @State private var recordingDuration: TimeInterval = 0
