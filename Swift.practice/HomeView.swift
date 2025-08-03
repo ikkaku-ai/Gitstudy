@@ -25,13 +25,27 @@ struct HomeView: View {
                     } else {
                         // 録音カードの横スクロール
                         VStack(alignment: .leading, spacing: 16) {
-                            Text("録音履歴")
-                                .font(.title2)
-                                .fontWeight(.bold)
-                                .padding(.horizontal, 20)
-                                .padding(.top, 20)
+                            HStack {
+                                Text("録音履歴")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                
+                                Spacer()
+                                
+                                HStack(spacing: 4) {
+                                    Image(systemName: "arrow.left.arrow.right")
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                    
+                                    Text("スワイプ")
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.top, 20)
                             
-                            ScrollView(.horizontal, showsIndicators: false) {
+                            ScrollView(.horizontal, showsIndicators: true) {
                                 HStack(spacing: 16) {
                                     ForEach(mascotData.mascots.reversed()) { mascot in
                                         RecordingCard(mascot: mascot)
@@ -41,7 +55,7 @@ struct HomeView: View {
                                 .padding(.horizontal, 20)
                                 .padding(.bottom, 10)
                             }
-                            .frame(height: 220)
+                            .frame(height: 320)
                         }
                         
                         Spacer()

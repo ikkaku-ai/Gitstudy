@@ -6,25 +6,31 @@ struct RecordingCard: View {
     @State private var isPlaying = false
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Image(mascot.imageName)
-                    .resizable()
-                    .frame(width: 60, height: 60)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                
-                VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 16) {
+            // メインヘッダー：日時と再生ボタンを最大級に目立たせる
+            HStack(alignment: .center, spacing: 16) {
+                VStack(alignment: .leading, spacing: 6) {
                     Text(formatDate(mascot.recordingDate))
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        .font(.title)
+                        .fontWeight(.bold)
+                        .foregroundColor(.primary)
                     
                     Text(formatTime(mascot.recordingDate))
-                        .font(.title3)
-                        .fontWeight(.semibold)
+                        .font(.title2)
+                        .fontWeight(.medium)
+                        .foregroundColor(.secondary)
                 }
                 
                 Spacer()
                 
+                // マスコット画像（小さめにして目立たなくする）
+                Image(mascot.imageName)
+                    .resizable()
+                    .frame(width: 50, height: 50)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .opacity(0.7)
+                
+                // 再生ボタンを大きく目立たせる
                 Button(action: {
                     if let url = mascot.recordingURL {
                         if audioRecorder.isPlaying {
@@ -34,42 +40,32 @@ struct RecordingCard: View {
                         }
                     }
                 }) {
-                    Image(systemName: audioRecorder.isPlaying ? "stop.circle.fill" : "play.circle.fill")
-                        .font(.system(size: 36))
-                        .foregroundColor(.blue)
+                    ZStack {
+                        Circle()
+                            .fill(Color.blue)
+                            .frame(width: 70, height: 70)
+                        
+                        Image(systemName: audioRecorder.isPlaying ? "stop.fill" : "play.fill")
+                            .font(.system(size: 28))
+                            .foregroundColor(.white)
+                    }
                 }
+                .shadow(color: .blue.opacity(0.3), radius: 8, x: 0, y: 4)
             }
             
             Divider()
             
             VStack(alignment: .leading, spacing: 8) {
-                Text("要約")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .textCase(.uppercase)
-                
-                Text(mascot.summary.isEmpty ? "要約を生成中..." : mascot.summary)
-                    .font(.subheadline)
-                    .lineLimit(3)
-                    .multilineTextAlignment(.leading)
-            }
-            
-            if !mascot.transcriptionText.isEmpty {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("文字起こし")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                        .textCase(.uppercase)
-                    
-                    Text(mascot.transcriptionText)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .lineLimit(2)
+                ScrollView(.vertical, showsIndicators: false) {
+                    Text(mascot.transcriptionText.isEmpty ? "文字起こし中..." : mascot.transcriptionText)
+                        .font(.subheadline)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
         }
         .padding()
-        .frame(width: 280, height: 200)
+        .frame(width: UIScreen.main.bounds.width - 40, height: 300)
         .background(Color.white)
         .cornerRadius(16)
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
