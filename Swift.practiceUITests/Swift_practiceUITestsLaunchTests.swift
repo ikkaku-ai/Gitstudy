@@ -1,10 +1,3 @@
-//
-//  Swift_practiceUITestsLaunchTests.swift
-//  Swift.practiceUITests
-//
-//  Created by 藤井陽樹 on 2025/07/26.
-//
-
 import XCTest
 
 final class Swift_practiceUITestsLaunchTests: XCTestCase {
