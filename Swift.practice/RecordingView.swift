@@ -73,9 +73,10 @@ struct RecordingView: View {
             }
             .navigationTitle("録音")
             .navigationBarTitleDisplayMode(.large)
-            .navigationBarItems(trailing: Button("閉じる") {
-                isPresented = false
-            })
+            // 「閉じる」ボタンは、自動で閉じる動作と重複するため削除
+            // .navigationBarItems(trailing: Button("閉じる") {
+            //     isPresented = false
+            // })
             .alert("録音を開始しますか？", isPresented: $showRecordingAlert) {
                 Button("キャンセル", role: .cancel) {
                     showRecordingAlert = false
@@ -126,6 +127,9 @@ struct RecordingView: View {
                     // MascotDataModelにMascotRecordを追加するメソッドを呼び出し
                     mascotData.addMascotRecord(imageName: mascotRecord.imageName, recordingURL: mascotRecord.recordingURL, transcriptionText: mascotRecord.transcriptionText, summary: mascotRecord.summary)
                 }
+                
+                // 録音処理が完了したら画面を閉じる
+                self.isPresented = false
             }
         }
     }

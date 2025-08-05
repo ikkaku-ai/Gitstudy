@@ -32,6 +32,13 @@ class MascotDataModel: ObservableObject {
         )
         mascotRecords.append(newRecord)
     }
+    
+    // MascotRecordを削除するメソッドを追加
+    func removeMascotRecord(withId id: UUID) {
+        if let index = mascotRecords.firstIndex(where: { $0.id == id }) {
+            mascotRecords.remove(at: index)
+        }
+    }
 
     // 文字起こし結果を更新するメソッド
     func updateMascotTranscription(for recordingURL: URL, transcriptionText: String) {

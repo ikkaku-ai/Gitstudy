@@ -3,14 +3,16 @@ import SwiftUI
 struct RecordingCard: View {
     let mascotRecord: MascotRecord
     @EnvironmentObject var audioRecorder: AudioRecorder
+    @EnvironmentObject var mascotData: MascotDataModel // 削除機能のためにMascotDataModelを追加
     @State private var isPlaying = false
+    @State private var showDeleteConfirmation = false // アラート表示用の状態変数
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             // メインヘッダー：日付、画像、再生ボタン
             HStack(alignment: .center, spacing: 16) {
                 
-                // 日付を表示 (VStack)
+                // 日付を表示
                 VStack(alignment: .leading, spacing: 6) {
                     Text(formatDate(mascotRecord.recordingDate))
                         .font(.title)
@@ -22,10 +24,11 @@ struct RecordingCard: View {
                         .fontWeight(.medium)
                         .foregroundColor(.secondary)
                 }
-                
+
+                // ここにSpacerを追加して、アイコンを右に寄せる
                 Spacer()
                 
-                // 画像をそのまま表示 (Image)
+                // 画像をそのまま表示
                 Image(mascotRecord.imageName)
                     .resizable()
                     .frame(width: 80, height: 80)
@@ -71,6 +74,20 @@ struct RecordingCard: View {
         .background(Color.white)
         .cornerRadius(16)
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
+        // 長押しジェスチャーとアラートを追加
+        .onLongPressGesture {
+            showDeleteConfirmation = true
+        }
+        .alert("この録音を消去しますか？", isPresented: $showDeleteConfirmation) {
+            Button("消去", role: .destructive) {
+                mascotData.removeMascotRecord(withId: mascotRecord.id)
+            }
+            Button("キャンセル", role: .cancel) {
+                // 何もしない
+            }
+        } message: {
+            Text("この操作は取り消せません。")
+        }
     }
 
     private func formatDate(_ date: Date) -> String {

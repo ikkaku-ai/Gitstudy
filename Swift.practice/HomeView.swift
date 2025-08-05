@@ -50,6 +50,7 @@ struct HomeView: View {
                                     ForEach(mascotData.mascotRecords.reversed()) { mascotRecord in
                                         RecordingCard(mascotRecord: mascotRecord)
                                             .environmentObject(audioRecorder)
+                                            .environmentObject(mascotData) // mascotDataを追加
                                     }
                                 }
                                 .padding(.horizontal, 20)
