@@ -11,6 +11,15 @@ struct DisplayMascot: Identifiable {
     let summary: String // AI要約
 }
 
+// ランダムな数を生成するための簡単な構造体
+struct SeededRandomNumberGenerator: RandomNumberGenerator {
+    var seed: UInt64
+    mutating func next() -> UInt64 {
+        seed = seed &* 6364136223846793005 &+ 1
+        return seed
+    }
+}
+
 
 
 // MARK: - ContentView
@@ -20,6 +29,8 @@ struct ContentView: View {
     @StateObject private var mascotData = MascotDataModel()
     @StateObject private var audioRecorder = AudioRecorder()
     @StateObject private var speechRecognizer = SpeechRecognizer()
+    @State private var resultNumber: Int? // 1〜100の数値が格納される
+
     
     var body: some View {
         ZStack {
