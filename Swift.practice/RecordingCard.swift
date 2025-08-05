@@ -1,21 +1,23 @@
 import SwiftUI
 
 struct RecordingCard: View {
-    let mascot: DisplayMascot
+    let mascotRecord: MascotRecord
     @EnvironmentObject var audioRecorder: AudioRecorder
     @State private var isPlaying = false
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // メインヘッダー：日時と再生ボタンを最大級に目立たせる
+            // メインヘッダー：日付、画像、再生ボタン
             HStack(alignment: .center, spacing: 16) {
+                
+                // 日付を表示 (VStack)
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(formatDate(mascot.recordingDate))
+                    Text(formatDate(mascotRecord.recordingDate))
                         .font(.title)
                         .fontWeight(.bold)
                         .foregroundColor(.primary)
-                    
-                    Text(formatTime(mascot.recordingDate))
+
+                    Text(formatTime(mascotRecord.recordingDate))
                         .font(.title2)
                         .fontWeight(.medium)
                         .foregroundColor(.secondary)
@@ -23,9 +25,16 @@ struct RecordingCard: View {
                 
                 Spacer()
                 
-                // 再生ボタンを大きく目立たせる
+                // 画像をそのまま表示 (Image)
+                Image(mascotRecord.imageName)
+                    .resizable()
+                    .frame(width: 80, height: 80)
+
+                Spacer()
+
+                // 再生ボタン
                 Button(action: {
-                    if let url = mascot.recordingURL {
+                    if let url = mascotRecord.recordingURL {
                         if audioRecorder.isPlaying {
                             audioRecorder.stopPlaying()
                         } else {
@@ -37,7 +46,7 @@ struct RecordingCard: View {
                         Circle()
                             .fill(Color.blue)
                             .frame(width: 70, height: 70)
-                        
+
                         Image(systemName: audioRecorder.isPlaying ? "stop.fill" : "play.fill")
                             .font(.system(size: 28))
                             .foregroundColor(.white)
@@ -45,12 +54,12 @@ struct RecordingCard: View {
                 }
                 .shadow(color: .blue.opacity(0.3), radius: 8, x: 0, y: 4)
             }
-            
+
             Divider()
-            
+
             VStack(alignment: .leading, spacing: 8) {
                 ScrollView(.vertical, showsIndicators: false) {
-                    Text(mascot.transcriptionText.isEmpty ? "文字起こし中..." : mascot.transcriptionText)
+                    Text(mascotRecord.transcriptionText.isEmpty ? "文字起こし中..." : mascotRecord.transcriptionText)
                         .font(.subheadline)
                         .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -63,13 +72,13 @@ struct RecordingCard: View {
         .cornerRadius(16)
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
     }
-    
+
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy/MM/dd"
         return formatter.string(from: date)
     }
-    
+
     private func formatTime(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm"

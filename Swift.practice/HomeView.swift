@@ -11,7 +11,7 @@ struct HomeView: View {
                 Color(red: 0.8, green: 0.95, blue: 1.0).edgesIgnoringSafeArea(.all)
                 
                 VStack(spacing: 0) {
-                    if mascotData.mascots.isEmpty {
+                    if mascotData.mascotRecords.isEmpty {
                         VStack(spacing: 20) {
                             Image(systemName: "mic.circle.fill")
                                 .font(.system(size: 80))
@@ -47,8 +47,8 @@ struct HomeView: View {
                             
                             ScrollView(.horizontal, showsIndicators: true) {
                                 HStack(spacing: 16) {
-                                    ForEach(mascotData.mascots.reversed()) { mascot in
-                                        RecordingCard(mascot: mascot)
+                                    ForEach(mascotData.mascotRecords.reversed()) { mascotRecord in
+                                        RecordingCard(mascotRecord: mascotRecord)
                                             .environmentObject(audioRecorder)
                                     }
                                 }

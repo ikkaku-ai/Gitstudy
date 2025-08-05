@@ -5,8 +5,6 @@ import Speech
 struct RecordingView: View {
     @Binding var isPresented: Bool
     @State private var showRecordingAlert = false
-    @State private var generatedImageName: String?
-    @State private var generatedNumber: Int?
 
     @EnvironmentObject var mascotData: MascotDataModel
     @EnvironmentObject var audioRecorder: AudioRecorder
@@ -38,20 +36,6 @@ struct RecordingView: View {
                                 .padding(.horizontal, 40)
                         }
                         .padding(.bottom, 100)
-                    } else if let imageName = generatedImageName, let number = generatedNumber {
-                        VStack(spacing: 20) {
-                            Text("生成された数値: \(number)")
-                                .font(.title2)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.black)
-                            
-                            Image(imageName)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 200, height: 200)
-                                .padding()
-                        }
-                        .transition(.scale)
                     } else {
                         VStack(spacing: 20) {
                             Image(systemName: "mic.circle")
@@ -70,8 +54,6 @@ struct RecordingView: View {
                         if audioRecorder.isRecording {
                             stopRecordingAndProcess()
                         } else {
-                            generatedImageName = nil
-                            generatedNumber = nil
                             showRecordingAlert = true
                         }
                     }) {
@@ -123,32 +105,47 @@ struct RecordingView: View {
                     let transcriptionText = speechRecognizer.transcriptionResult.isEmpty ?
                     "文字起こしできませんでした" : speechRecognizer.transcriptionResult
                     
-                    // MARK: - ここが修正された部分
-                    // 文字起こし結果に基づいて数値を生成
                     let number = generateNumber(from: transcriptionText)
                     let imageName = self.imageName(for: number) ?? "1"
                     
-                    DispatchQueue.main.async {
-                        self.generatedNumber = number
-                        self.generatedImageName = imageName
-                    }
+                    // デバッグ用ログ
+                    print("生成された数値: \(number)")
+                    print("選択された画像名: \(imageName)")
+                    print("文字起こし結果: \(transcriptionText)")
                     
-                    mascotData.addMascot(
+                    // MascotRecordオブジェクトを作成して追加
+                    let mascotRecord = MascotRecord(
                         imageName: imageName,
-                        recordingURL: recordingURL
+                        displayCount: 1,
+                        recordingURL: recordingURL,
+                        transcriptionText: transcriptionText,
+                        recordingDate: Date(),
+                        summary: generateSummary(from: transcriptionText, number: number)
                     )
                     
-                    mascotData.updateMascotTranscription(
-                        for: recordingURL,
-                        transcriptionText: transcriptionText
-                    )
+                    // MascotDataModelにMascotRecordを追加するメソッドを呼び出し
+                    mascotData.addMascotRecord(imageName: mascotRecord.imageName, recordingURL: mascotRecord.recordingURL, transcriptionText: mascotRecord.transcriptionText, summary: mascotRecord.summary)
                 }
             }
         }
     }
     
-    // MARK: - ここが修正された部分
-    // キーワードに基づいて1〜100の数値を生成する関数
+    // 要約テキストを生成する関数
+    private func generateSummary(from text: String, number: Int) -> String {
+        switch number {
+        case 1...20:
+            return "怒りや不満の感情を表現しています"
+        case 21...50:
+            return "悲しみや辛さの感情を表現しています"
+        case 51...75:
+            return "普通の感情状態です"
+        case 76...100:
+            return "喜びや楽しさの感情を表現しています"
+        default:
+            return "感情を分析しました"
+        }
+    }
+    
     private func generateNumber(from text: String) -> Int {
         let lowercasedText = text.lowercased()
         
@@ -159,7 +156,6 @@ struct RecordingView: View {
         } else if lowercasedText.contains("悲しい") || lowercasedText.contains("辛い") || lowercasedText.contains("さみしい") || lowercasedText.contains("どうして") || lowercasedText.contains("無理") || lowercasedText.contains("何もしたくない") || lowercasedText.contains("寂しい") || lowercasedText.contains("辛い") || lowercasedText.contains("わからない") || lowercasedText.contains("ごめんなさい") || lowercasedText.contains("もういいんだ") || lowercasedText.contains("疲れた"){
             return Int.random(in: 21...50)
         } else {
-            // キーワードが見つからない場合は、中間的な数値をランダムに生成
             return Int.random(in: 51...75)
         }
     }
@@ -167,15 +163,15 @@ struct RecordingView: View {
     private func imageName(for number: Int) -> String? {
         switch number {
         case 1...20:
-            return "3"
+            return "3"  // 怒り・不満の画像
         case 21...50:
-            return "2"
+            return "2"  // 悲しみ・辛さの画像
         case 51...75:
-            return "1"
+            return "1"  // 普通の画像
         case 76...100:
-            return "4"
+            return "4"  // 喜び・楽しさの画像
         default:
-            return nil
+            return "1"  // デフォルト画像
         }
     }
 }
