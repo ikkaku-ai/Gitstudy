@@ -3,7 +3,8 @@ import Foundation
 import GoogleGenerativeAI
 
 // MARK: - MascotRecordの定義
-struct MascotRecord: Identifiable, Equatable {
+// Codableに準拠させることで、UserDefaultsに保存できるようになります。
+struct MascotRecord: Identifiable, Equatable, Codable {
     var id: UUID = UUID()
     var imageName: String
     var displayCount: Int
@@ -21,8 +22,14 @@ struct GeminiCommentResponse: Codable {
 
 // MARK: - MascotDataModelの定義
 class MascotDataModel: ObservableObject {
-    @Published var mascotRecords: [MascotRecord] = []
+    @Published var mascotRecords: [MascotRecord] = [] {
+        didSet {
+            saveMascotRecords() // データが変更されるたびに自動保存
+        }
+    }
     @Published var count: Int = 0
+    
+    private let userDefaultsKey = "savedMascotRecords"
     
     // TODO: ここに取得したGemini APIキーを設定してください。
     // https://aistudio.google.com/ でAPIキーを取得できます。
@@ -36,15 +43,38 @@ class MascotDataModel: ObservableObject {
         2: ["そっか、そうなんだね。", "うん、わかる気がするよ。", "無理しないでね。"],
         // 普通 (51-75)
         3: ["なるほど、そういうことか。", "うん、聞けてよかったよ。"],
-        // 喜びや楽しさ (76-100)
+        // 喜びや楽しさ (76...100)
         4: ["お話してくれてありがとう！", "聞かせてくれて嬉しいな。", "よかったね！"]
     ]
+    
+    init() {
+        loadMascotRecords() // 起動時に保存されたデータを読み込む
+    }
+    
+    // MARK: - UserDefaultsを使ったデータの永続化
+    func saveMascotRecords() {
+        if let encodedData = try? JSONEncoder().encode(mascotRecords) {
+            UserDefaults.standard.set(encodedData, forKey: userDefaultsKey)
+            print("💾 Mascot RecordsをUserDefaultsに保存しました。")
+        }
+    }
+    
+    func loadMascotRecords() {
+        if let savedData = UserDefaults.standard.data(forKey: userDefaultsKey) {
+            if let decodedRecords = try? JSONDecoder().decode([MascotRecord].self, from: savedData) {
+                DispatchQueue.main.async {
+                    self.mascotRecords = decodedRecords
+                    self.count = decodedRecords.count
+                    print("📂 Mascot RecordsをUserDefaultsから読み込みました。")
+                }
+            }
+        }
+    }
 
     func addMascotRecord(imageName: String, recordingURL: URL?, transcriptionText: String = "", summary: String = "", adviceText: String = "") {
-        count += 1
         let newRecord = MascotRecord(
             imageName: imageName,
-            displayCount: count,
+            displayCount: mascotRecords.count + 1,
             recordingURL: recordingURL,
             transcriptionText: transcriptionText,
             recordingDate: Date(),
