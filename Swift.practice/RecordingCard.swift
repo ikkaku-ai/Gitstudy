@@ -3,9 +3,9 @@ import SwiftUI
 struct RecordingCard: View {
     let mascotRecord: MascotRecord
     @EnvironmentObject var audioRecorder: AudioRecorder
-    @EnvironmentObject var mascotData: MascotDataModel // 削除機能のためにMascotDataModelを追加
+    @EnvironmentObject var mascotData: MascotDataModel
     @State private var isPlaying = false
-    @State private var showDeleteConfirmation = false // アラート表示用の状態変数
+    @State private var showDeleteConfirmation = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -25,7 +25,6 @@ struct RecordingCard: View {
                         .foregroundColor(.secondary)
                 }
 
-                // ここにSpacerを追加して、アイコンを右に寄せる
                 Spacer()
                 
                 // 画像をそのまま表示
@@ -62,10 +61,26 @@ struct RecordingCard: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 ScrollView(.vertical, showsIndicators: false) {
+                    // 文字起こし結果
                     Text(mascotRecord.transcriptionText.isEmpty ? "文字起こし中..." : mascotRecord.transcriptionText)
                         .font(.subheadline)
                         .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    // Geminiからの要約とアドバイス
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("要約：\(mascotRecord.summary)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        
+                        // アドバイス
+                        Text("アドバイス：\(mascotRecord.adviceText)")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .foregroundColor(.blue)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 8)
                 }
             }
         }
@@ -74,7 +89,6 @@ struct RecordingCard: View {
         .background(Color.white)
         .cornerRadius(16)
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
-        // 長押しジェスチャーとアラートを追加
         .onLongPressGesture {
             showDeleteConfirmation = true
         }

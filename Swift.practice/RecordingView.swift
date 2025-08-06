@@ -73,10 +73,6 @@ struct RecordingView: View {
             }
             .navigationTitle("録音")
             .navigationBarTitleDisplayMode(.large)
-            // 「閉じる」ボタンは、自動で閉じる動作と重複するため削除
-            // .navigationBarItems(trailing: Button("閉じる") {
-            //     isPresented = false
-            // })
             .alert("録音を開始しますか？", isPresented: $showRecordingAlert) {
                 Button("キャンセル", role: .cancel) {
                     showRecordingAlert = false
@@ -106,76 +102,30 @@ struct RecordingView: View {
                     let transcriptionText = speechRecognizer.transcriptionResult.isEmpty ?
                     "文字起こしできませんでした" : speechRecognizer.transcriptionResult
                     
-                    let number = generateNumber(from: transcriptionText)
-                    let imageName = self.imageName(for: number) ?? "1"
-                    
-                    // デバッグ用ログ
-                    print("生成された数値: \(number)")
-                    print("選択された画像名: \(imageName)")
-                    print("文字起こし結果: \(transcriptionText)")
-                    
-                    // MascotRecordオブジェクトを作成して追加
+                    // 録音データ追加は、Gemini分析の前に実行
                     let mascotRecord = MascotRecord(
-                        imageName: imageName,
+                        imageName: "1", // 初期画像
                         displayCount: 1,
                         recordingURL: recordingURL,
                         transcriptionText: transcriptionText,
                         recordingDate: Date(),
-                        summary: generateSummary(from: transcriptionText, number: number)
+                        summary: "感情分析中...", // 初期要約
+                        adviceText: "アドバイスを生成中..." // 初期アドバイス
                     )
                     
-                    // MascotDataModelにMascotRecordを追加するメソッドを呼び出し
-                    mascotData.addMascotRecord(imageName: mascotRecord.imageName, recordingURL: mascotRecord.recordingURL, transcriptionText: mascotRecord.transcriptionText, summary: mascotRecord.summary)
+                    DispatchQueue.main.async {
+                        self.mascotData.addMascotRecord(imageName: mascotRecord.imageName, recordingURL: mascotRecord.recordingURL, transcriptionText: mascotRecord.transcriptionText, summary: mascotRecord.summary, adviceText: mascotRecord.adviceText)
+                    }
+
+                    // Geminiによる感情分析とデータ更新
+                    await mascotData.updateMascotTranscription(for: recordingURL, transcriptionText: transcriptionText)
                 }
                 
                 // 録音処理が完了したら画面を閉じる
-                self.isPresented = false
+                DispatchQueue.main.async {
+                    self.isPresented = false
+                }
             }
-        }
-    }
-    
-    // 要約テキストを生成する関数
-    private func generateSummary(from text: String, number: Int) -> String {
-        switch number {
-        case 1...20:
-            return "怒りや不満の感情を表現しています"
-        case 21...50:
-            return "悲しみや辛さの感情を表現しています"
-        case 51...75:
-            return "普通の感情状態です"
-        case 76...100:
-            return "喜びや楽しさの感情を表現しています"
-        default:
-            return "感情を分析しました"
-        }
-    }
-    
-    private func generateNumber(from text: String) -> Int {
-        let lowercasedText = text.lowercased()
-        
-        if lowercasedText.contains("楽しい") || lowercasedText.contains("嬉しい") || lowercasedText.contains("幸せ") || lowercasedText.contains("最高") || lowercasedText.contains("笑った") || lowercasedText.contains("遊びたい") || lowercasedText.contains("楽しかった") || lowercasedText.contains("楽しかったな") || lowercasedText.contains("ありがとう") || lowercasedText.contains("うれしい") || lowercasedText.contains("時間を忘れる"){
-            return Int.random(in: 76...100)
-        } else if lowercasedText.contains("怒り") || lowercasedText.contains("ムカつく") || lowercasedText.contains("不満") || lowercasedText.contains("やめてほしい") || lowercasedText.contains("嫌い") || lowercasedText.contains("嫌いそう") || lowercasedText.contains("嫌いそうな") || lowercasedText.contains("いい加減にしてほしい") || lowercasedText.contains("好きにすれば") {
-            return Int.random(in: 1...20)
-        } else if lowercasedText.contains("悲しい") || lowercasedText.contains("辛い") || lowercasedText.contains("さみしい") || lowercasedText.contains("どうして") || lowercasedText.contains("無理") || lowercasedText.contains("何もしたくない") || lowercasedText.contains("寂しい") || lowercasedText.contains("辛い") || lowercasedText.contains("わからない") || lowercasedText.contains("ごめんなさい") || lowercasedText.contains("もういいんだ") || lowercasedText.contains("疲れた"){
-            return Int.random(in: 21...50)
-        } else {
-            return Int.random(in: 51...75)
-        }
-    }
-    
-    private func imageName(for number: Int) -> String? {
-        switch number {
-        case 1...20:
-            return "3"  // 怒り・不満の画像
-        case 21...50:
-            return "2"  // 悲しみ・辛さの画像
-        case 51...75:
-            return "1"  // 普通の画像
-        case 76...100:
-            return "4"  // 喜び・楽しさの画像
-        default:
-            return "1"  // デフォルト画像
         }
     }
 }
