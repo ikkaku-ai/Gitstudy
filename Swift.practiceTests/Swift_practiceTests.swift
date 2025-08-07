@@ -1,10 +1,3 @@
-//
-//  Swift_practiceTests.swift
-//  Swift.practiceTests
-//
-//  Created by 藤井陽樹 on 2025/07/26.
-//
-
 import Testing
 @testable import Swift_practice
 

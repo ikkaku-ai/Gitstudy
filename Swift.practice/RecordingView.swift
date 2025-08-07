@@ -1,13 +1,14 @@
 import SwiftUI
+import AVFoundation
+import Speech
 
 struct RecordingView: View {
     @Binding var isPresented: Bool
     @State private var showRecordingAlert = false
+
     @EnvironmentObject var mascotData: MascotDataModel
     @EnvironmentObject var audioRecorder: AudioRecorder
     @EnvironmentObject var speechRecognizer: SpeechRecognizer
-    
-    private let mascotImageNames: [String] = ["1", "2", "3", "4"]
     
     var body: some View {
         NavigationView {
@@ -72,9 +73,6 @@ struct RecordingView: View {
             }
             .navigationTitle("録音")
             .navigationBarTitleDisplayMode(.large)
-            .navigationBarItems(trailing: Button("閉じる") {
-                isPresented = false
-            })
             .alert("録音を開始しますか？", isPresented: $showRecordingAlert) {
                 Button("キャンセル", role: .cancel) {
                     showRecordingAlert = false
@@ -91,13 +89,6 @@ struct RecordingView: View {
     
     private func stopRecordingAndProcess() {
         audioRecorder.stopRecording()
-        isPresented = false
-        
-        let randomImageName = mascotImageNames.randomElement() ?? "1"
-        mascotData.addMascot(
-            imageName: randomImageName,
-            recordingURL: audioRecorder.recordingURL
-        )
         
         if let recordingURL = audioRecorder.recordingURL {
             print("録音ファイルのURL: \(recordingURL)")
@@ -109,12 +100,30 @@ struct RecordingView: View {
                     await speechRecognizer.transcribeAudio(from: recordingURL)
                     
                     let transcriptionText = speechRecognizer.transcriptionResult.isEmpty ?
-                        "文字起こしできませんでした" : speechRecognizer.transcriptionResult
+                    "文字起こしできませんでした" : speechRecognizer.transcriptionResult
                     
-                    mascotData.updateMascotTranscription(
-                        for: recordingURL,
-                        transcriptionText: transcriptionText
+                    // 録音データ追加は、Gemini分析の前に実行
+                    let mascotRecord = MascotRecord(
+                        imageName: "1", // 初期画像
+                        displayCount: 1,
+                        recordingURL: recordingURL,
+                        transcriptionText: transcriptionText,
+                        recordingDate: Date(),
+                        summary: "感情分析中...", // 初期要約
+                        adviceText: "アドバイスを生成中..." // 初期アドバイス
                     )
+                    
+                    DispatchQueue.main.async {
+                        self.mascotData.addMascotRecord(imageName: mascotRecord.imageName, recordingURL: mascotRecord.recordingURL, transcriptionText: mascotRecord.transcriptionText, summary: mascotRecord.summary, adviceText: mascotRecord.adviceText)
+                    }
+
+                    // Geminiによる感情分析とデータ更新
+                    await mascotData.updateMascotTranscription(for: recordingURL, transcriptionText: transcriptionText)
+                }
+                
+                // 録音処理が完了したら画面を閉じる
+                DispatchQueue.main.async {
+                    self.isPresented = false
                 }
             }
         }

@@ -1,18 +1,5 @@
 import SwiftUI
 
-// マスコットの情報を保持する構造体
-struct DisplayMascot: Identifiable {
-    let id = UUID()
-    let imageName: String
-    let displayCount: Int
-    let recordingURL: URL? // 音声録音機能を維持
-    let transcriptionText: String // 文字起こし結果
-    let recordingDate: Date // 録音日時
-    let summary: String // AI要約
-}
-
-
-
 // MARK: - ContentView
 struct ContentView: View {
     @State private var selectedTab: NavigationTab = .home
@@ -20,7 +7,8 @@ struct ContentView: View {
     @StateObject private var mascotData = MascotDataModel()
     @StateObject private var audioRecorder = AudioRecorder()
     @StateObject private var speechRecognizer = SpeechRecognizer()
-    
+    @State private var resultNumber: Int? // 1〜100の数値が格納される
+
     var body: some View {
         ZStack {
             TabView(selection: $selectedTab) {
