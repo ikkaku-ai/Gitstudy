@@ -1,3 +1,5 @@
+// ContentView.swift
+
 import SwiftUI
 
 // MARK: - ContentView
@@ -8,7 +10,7 @@ struct ContentView: View {
     @StateObject private var audioRecorder = AudioRecorder()
     @StateObject private var speechRecognizer = SpeechRecognizer()
     @State private var resultNumber: Int? // 1〜100の数値が格納される
-
+    
     var body: some View {
         ZStack {
             TabView(selection: $selectedTab) {
@@ -20,6 +22,14 @@ struct ContentView: View {
                     .environmentObject(mascotData)
                     .environmentObject(audioRecorder)
                     .environmentObject(speechRecognizer)
+                
+                // カレンダーのタブをチュートリアルの前に移動
+                CalendarTabView()
+                    .tabItem {
+                        Label(NavigationTab.calendar.displayName, systemImage: NavigationTab.calendar.symbolName)
+                    }
+                    .tag(NavigationTab.calendar)
+                    .environmentObject(mascotData)
                 
                 TutorialView()
                     .tabItem {

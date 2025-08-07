@@ -30,7 +30,7 @@ struct RecordingCard: View {
                 // 画像をそのまま表示
                 Image(mascotRecord.imageName)
                     .resizable()
-                    .frame(width: 80, height: 80)
+                    .frame(width: 90, height: 90)
 
                 Spacer()
 
