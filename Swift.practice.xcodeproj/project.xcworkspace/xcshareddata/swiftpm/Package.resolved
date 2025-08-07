@@ -1,5 +1,5 @@
 {
-  "originHash" : "fb9ac36071f364d419c527ac181073d029907ab8c2d0a2cf5e1dbf2b4a353436",
+  "originHash" : "d93386082d1c7695b81396a486e254118d4fa9e788e58cd9ebe803ba527aba86",
   "pins" : [
     {
       "identity" : "generative-ai-swift",
@@ -8,6 +8,15 @@
       "state" : {
         "revision" : "44b8ce120425f9cf53ca756f3434ca2c2696f8bd",
         "version" : "0.5.6"
+      }
+    },
+    {
+      "identity" : "swiftuicalendar",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/GGJJack/SwiftUICalendar",
+      "state" : {
+        "revision" : "7ecd220909bc25529e35e2addb513a20abbfec82",
+        "version" : "0.1.14"
       }
     }
   ],

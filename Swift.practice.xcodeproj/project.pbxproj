@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		E90EE1C42E431A6600D5758F /* GoogleGenerativeAI in Frameworks */ = {isa = PBXBuildFile; productRef = E90EE1C32E431A6600D5758F /* GoogleGenerativeAI */; };
+		E90EE1D32E44E51000D5758F /* SwiftUICalendar in Frameworks */ = {isa = PBXBuildFile; productRef = E90EE1D22E44E51000D5758F /* SwiftUICalendar */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -56,6 +57,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E90EE1D32E44E51000D5758F /* SwiftUICalendar in Frameworks */,
 				E90EE1C42E431A6600D5758F /* GoogleGenerativeAI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -126,6 +128,7 @@
 			name = Swift.practice;
 			packageProductDependencies = (
 				E90EE1C32E431A6600D5758F /* GoogleGenerativeAI */,
+				E90EE1D22E44E51000D5758F /* SwiftUICalendar */,
 			);
 			productName = Swift.practice;
 			productReference = E9E48F672E345A6000011F60 /* Swift.practice.app */;
@@ -211,6 +214,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				E90EE1B72E4310A400D5758F /* XCRemoteSwiftPackageReference "generative-ai-swift" */,
+				E90EE1CE2E44E42700D5758F /* XCRemoteSwiftPackageReference "SwiftUICalendar" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E9E48F682E345A6000011F60 /* Products */;
@@ -587,6 +591,14 @@
 				minimumVersion = 0.5.6;
 			};
 		};
+		E90EE1CE2E44E42700D5758F /* XCRemoteSwiftPackageReference "SwiftUICalendar" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/GGJJack/SwiftUICalendar";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.1.14;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -594,6 +606,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E90EE1B72E4310A400D5758F /* XCRemoteSwiftPackageReference "generative-ai-swift" */;
 			productName = GoogleGenerativeAI;
+		};
+		E90EE1D22E44E51000D5758F /* SwiftUICalendar */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E90EE1CE2E44E42700D5758F /* XCRemoteSwiftPackageReference "SwiftUICalendar" */;
+			productName = SwiftUICalendar;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
