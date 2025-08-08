@@ -58,6 +58,11 @@ struct ContentView: View {
             VStack {
                 Spacer()
                 HStack {
+                    Button{
+
+                    } label: {
+                        Text("a")
+                    }
                     Spacer()
                     FloatingRecordButton(showRecordingView: $showRecordingView)
                         .padding(.trailing, 20)
