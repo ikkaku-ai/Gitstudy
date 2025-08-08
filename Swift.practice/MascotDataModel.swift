@@ -1,18 +1,26 @@
 import SwiftUI
 import Foundation
 import GoogleGenerativeAI
+import SwiftUICalendar
 
 // MARK: - MascotRecordの定義
-// Codableに準拠させることで、UserDefaultsに保存できるようになります。
 struct MascotRecord: Identifiable, Equatable, Codable {
     var id: UUID = UUID()
     var imageName: String
     var displayCount: Int
-    var recordingURL: URL?
+    // 修正: recordingURLを削除し、ファイル名のみを保存
+    var recordingFilename: String?
     var transcriptionText: String
     var recordingDate: Date
     var summary: String
     var adviceText: String = "" // コメントとして使用
+    
+    // 修正: ファイル名からURLを動的に生成するコンピューテッドプロパティ
+    var recordingURL: URL? {
+        guard let filename = recordingFilename else { return nil }
+        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        return documentsPath.appendingPathComponent(filename)
+    }
 }
 
 // Gemini APIからのレスポンスをデコードするための構造体
@@ -28,6 +36,7 @@ class MascotDataModel: ObservableObject {
         }
     }
     @Published var count: Int = 0
+    @Published var latestRecordID: UUID?
     
     private let userDefaultsKey = "savedMascotRecords"
     
@@ -75,7 +84,8 @@ class MascotDataModel: ObservableObject {
         let newRecord = MascotRecord(
             imageName: imageName,
             displayCount: mascotRecords.count + 1,
-            recordingURL: recordingURL,
+            // 修正: URLからファイル名のみを抽出して保存
+            recordingFilename: recordingURL?.lastPathComponent,
             transcriptionText: transcriptionText,
             recordingDate: Date(),
             summary: summary,
@@ -98,12 +108,13 @@ class MascotDataModel: ObservableObject {
         let imageName = self.imageName(for: number) ?? "1"
         
         DispatchQueue.main.async {
-            if let index = self.mascotRecords.firstIndex(where: { $0.recordingURL == recordingURL }) {
+            // 修正: ファイル名で一致するレコードを検索
+            if let index = self.mascotRecords.firstIndex(where: { $0.recordingFilename == recordingURL.lastPathComponent }) {
                 let existingRecord = self.mascotRecords[index]
                 let updatedRecord = MascotRecord(
                     imageName: imageName,
                     displayCount: existingRecord.displayCount,
-                    recordingURL: existingRecord.recordingURL,
+                    recordingFilename: existingRecord.recordingFilename,
                     transcriptionText: transcriptionText,
                     recordingDate: existingRecord.recordingDate,
                     summary: summary,
@@ -116,12 +127,13 @@ class MascotDataModel: ObservableObject {
         let comment = await generateCommentWithGemini(from: transcriptionText, emotionSummary: summary, emotionNumber: number)
         
         DispatchQueue.main.async {
-            if let index = self.mascotRecords.firstIndex(where: { $0.recordingURL == recordingURL }) {
+            // 修正: ファイル名で一致するレコードを検索
+            if let index = self.mascotRecords.firstIndex(where: { $0.recordingFilename == recordingURL.lastPathComponent }) {
                 let existingRecord = self.mascotRecords[index]
                 let updatedRecord = MascotRecord(
                     imageName: existingRecord.imageName,
                     displayCount: existingRecord.displayCount,
-                    recordingURL: existingRecord.recordingURL,
+                    recordingFilename: existingRecord.recordingFilename,
                     transcriptionText: existingRecord.transcriptionText,
                     recordingDate: existingRecord.recordingDate,
                     summary: existingRecord.summary,
@@ -129,10 +141,28 @@ class MascotDataModel: ObservableObject {
                 )
                 self.mascotRecords[index] = updatedRecord
                 print("✅ コメントがGeminiで更新されました: \(comment)")
+                
+                self.latestRecordID = updatedRecord.id
             }
         }
     }
 
+    func findOldestRecordID(for yearMonthDay: YearMonthDay) -> UUID? {
+        let calendar = Calendar.current
+        
+        guard let startDate = calendar.date(from: DateComponents(year: yearMonthDay.year, month: yearMonthDay.month, day: yearMonthDay.day)),
+              let endDate = calendar.date(byAdding: .day, value: 1, to: startDate) else {
+            return nil
+        }
+        
+        let oldestRecord = mascotRecords
+            .filter { $0.recordingDate >= startDate && $0.recordingDate < endDate }
+            .sorted { $0.recordingDate < $1.recordingDate }
+            .first
+        
+        return oldestRecord?.id
+    }
+    
     private func generateSummary(from text: String, number: Int) -> String {
         switch number {
         case 1...20:
@@ -169,7 +199,7 @@ class MascotDataModel: ObservableObject {
         case 21...50: key = 2
         case 51...75: key = 3
         case 76...100: key = 4
-        default: key = 3 // 該当しない場合は普通に分類
+        default: key = 3
         }
         return fallbackComments[key]?.randomElement() ?? "うん、わかるよ。"
     }

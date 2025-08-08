@@ -23,13 +23,13 @@ struct TutorialView: View {
                         TutorialSection(
                             icon: "play.circle.fill",
                             title: "音声再生",
-                            description: "ホームタブで表示されたマスコットをタップすると再生ボタンが表示され、録音した音声を再生できます。"
+                            description: "ホームタブで表示された再生ボタンをタップすると、録音した音声を再生できます。"
                         )
                         
                         TutorialSection(
                             icon: "square.grid.2x2.fill",
-                            title: "マスコット表示",
-                            description: "録音するたびに新しいマスコットが追加されます。マスコットは2つずつ横に並んで表示されます。"
+                            title: "検索",
+                            description: "カレンダーの日付を押すと、その日の一番古いカードに飛ぶ。"
                         )
                         
                         Spacer(minLength: 50)

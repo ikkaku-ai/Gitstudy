@@ -1,9 +1,13 @@
 import SwiftUI
+import SwiftUICalendar // SwiftUICalendarをインポート
 
 struct HomeView: View {
     @EnvironmentObject var mascotData: MascotDataModel
     @EnvironmentObject var audioRecorder: AudioRecorder
     @EnvironmentObject var speechRecognizer: SpeechRecognizer
+    
+    // ContentViewからスクロール先のIDを受け取るためのバインディング
+    @Binding var scrollToID: UUID?
     
     var body: some View {
         NavigationView {
@@ -45,18 +49,30 @@ struct HomeView: View {
                             .padding(.horizontal, 20)
                             .padding(.top, 20)
                             
-                            ScrollView(.horizontal, showsIndicators: true) {
-                                HStack(spacing: 16) {
-                                    ForEach(mascotData.mascotRecords.reversed()) { mascotRecord in
-                                        RecordingCard(mascotRecord: mascotRecord)
-                                            .environmentObject(audioRecorder)
-                                            .environmentObject(mascotData) // mascotDataを追加
+                            ScrollViewReader { proxy in
+                                ScrollView(.horizontal, showsIndicators: true) {
+                                    HStack(spacing: 16) {
+                                        ForEach(mascotData.mascotRecords.reversed()) { mascotRecord in
+                                            RecordingCard(mascotRecord: mascotRecord)
+                                                .environmentObject(audioRecorder)
+                                                .environmentObject(mascotData)
+                                                .id(mascotRecord.id) // 各カードに一意のIDを設定
+                                        }
+                                    }
+                                    .padding(.horizontal, 20)
+                                    .padding(.bottom, 10)
+                                }
+                                .frame(height: 320)
+                                .onChange(of: scrollToID) { newID in
+                                    if let id = newID {
+                                        withAnimation {
+                                            // 該当IDのカードまでスクロール
+                                            proxy.scrollTo(id, anchor: .leading)
+                                            self.scrollToID = nil // スクロール後、IDをリセット
+                                        }
                                     }
                                 }
-                                .padding(.horizontal, 20)
-                                .padding(.bottom, 10)
                             }
-                            .frame(height: 320)
                         }
                         
                         Spacer()

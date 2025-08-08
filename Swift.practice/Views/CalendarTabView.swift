@@ -4,9 +4,21 @@ import SwiftUICalendar // ライブラリのインポート
 struct CalendarTabView: View {
     @ObservedObject var controller: CalendarController = CalendarController()
     @State var focusDate: YearMonthDay? = YearMonthDay.current
+    @Binding var selectedDate: YearMonthDay? // ContentViewに選択された日付を渡すためのバインディング
+    
+    // 環境オブジェクトからmascotDataを取得
+    @EnvironmentObject var mascotData: MascotDataModel
     
     // 日本語の曜日配列
     let japaneseWeekdays = ["日", "月", "火", "水", "木", "金", "土"]
+    
+    // 感情ごとの色を定義
+    private let emotionColors: [String: Color] = [
+        "怒り": .red,
+        "悲しみ": .blue,
+        "普通": .yellow,
+        "喜び": .green
+    ]
     
     var body: some View {
         NavigationView {
@@ -60,7 +72,7 @@ struct CalendarTabView: View {
                     // 曜日のヘッダーを日本語に変更
                     HStack(alignment: .center, spacing: 0) {
                         ForEach(0..<7, id: \.self) { i in
-                            Text(japaneseWeekdays[i]) // ここを日本語の曜日配列に変更
+                            Text(japaneseWeekdays[i])
                                 .font(.headline)
                                 .frame(width: reader.size.width / 7)
                         }
@@ -69,19 +81,66 @@ struct CalendarTabView: View {
                     // カレンダー本体
                     CalendarView(controller) { date in
                         GeometryReader { geometry in
-                            VStack {
+                            VStack(spacing: 2) {
+                                // 日付の表示
                                 if date.isToday {
                                     Text("\(date.day)")
                                         .font(.system(size: 15, weight: .bold))
                                         .foregroundColor(.white)
                                         .frame(width: 20, height: 20)
-                                        .background(Color.yellow)
+                                        .background(Color.blue)
                                         .clipShape(Circle())
                                 } else {
                                     Text("\(date.day)")
                                         .foregroundColor(getColor(date))
                                         .font(.system(size: 15, weight: .light, design: .default))
                                 }
+                                
+                                // 修正: 日付の下にカードを示す円を追加 (1行目は中央、2行目以降は右から)
+                                // 修正: 日付と円の間に適切な間隔を確保
+                                Spacer(minLength: 4)
+                                
+                                let records = mascotData.mascotRecords
+                                    .filter { isSameDay(date: $0.recordingDate, as: date) }
+                                    .sorted { $0.recordingDate < $1.recordingDate }
+                                
+                                if !records.isEmpty {
+                                    // 1行目の表示（中央寄せ）
+                                    HStack {
+                                        Spacer()
+                                        HStack(spacing: 2) {
+                                            ForEach(records.prefix(4), id: \.id) { record in
+                                                Circle()
+                                                    .fill(getColorForSummary(record.summary))
+                                                    .frame(width: 5, height: 5)
+                                            }
+                                        }
+                                        Spacer()
+                                    }
+                                    
+                                    // 2行目以降の表示（右寄せ）
+                                    if records.count > 4 {
+                                        VStack(alignment: .trailing, spacing: 2) {
+                                            ForEach(0..<((records.count - 4) + 3) / 4, id: \.self) { row in
+                                                HStack(spacing: 2) {
+                                                    ForEach(0..<4, id: \.self) { col in
+                                                        let index = 4 + row * 4 + col
+                                                        if index < records.count {
+                                                            Circle()
+                                                                .fill(getColorForSummary(records[index].summary))
+                                                                .frame(width: 5, height: 5)
+                                                        } else {
+                                                            Circle()
+                                                                .fill(Color.clear)
+                                                                .frame(width: 5, height: 5)
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                Spacer()
                             }
                             .frame(width: geometry.size.width, height: geometry.size.height, alignment: .center)
                             .opacity(date.isFocusYearMonth == true ? 1 : 0.4)
@@ -89,9 +148,9 @@ struct CalendarTabView: View {
                             .cornerRadius(2)
                             .contentShape(Rectangle())
                             .onTapGesture {
+                                self.selectedDate = date
                                 focusDate = (date != focusDate ? date : nil)
                             }
-                            // ここを修正: グリッド線を追加
                             .border(Color.gray, width: 0.5)
                         }
                     }
@@ -111,5 +170,29 @@ struct CalendarTabView: View {
         } else {
             return Color.black
         }
+    }
+    
+    // 感情の要約に基づいて色を返すヘルパーメソッド
+    private func getColorForSummary(_ summary: String) -> Color {
+        switch summary {
+        case "喜びや楽しさ":
+            return .green
+        case "怒りや不満":
+            return .red
+        case "悲しみや辛さ":
+            return .blue
+        default:
+            return .yellow
+        }
+    }
+    
+    // DateとYearMonthDayが同じ日かどうかを判定するヘルパーメソッド
+    private func isSameDay(date: Date, as yearMonthDay: YearMonthDay) -> Bool {
+        let calendar = Calendar.current
+        let dateComponents = calendar.dateComponents([.year, .month, .day], from: date)
+        
+        return dateComponents.year == yearMonthDay.year &&
+               dateComponents.month == yearMonthDay.month &&
+               dateComponents.day == yearMonthDay.day
     }
 }

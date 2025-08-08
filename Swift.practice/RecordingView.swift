@@ -102,19 +102,15 @@ struct RecordingView: View {
                     let transcriptionText = speechRecognizer.transcriptionResult.isEmpty ?
                     "文字起こしできませんでした" : speechRecognizer.transcriptionResult
                     
-                    // 録音データ追加は、Gemini分析の前に実行
-                    let mascotRecord = MascotRecord(
-                        imageName: "1", // 初期画像
-                        displayCount: 1,
-                        recordingURL: recordingURL,
-                        transcriptionText: transcriptionText,
-                        recordingDate: Date(),
-                        summary: "感情分析中...", // 初期要約
-                        adviceText: "アドバイスを生成中..." // 初期アドバイス
-                    )
-                    
+                    // 録音データ追加
                     DispatchQueue.main.async {
-                        self.mascotData.addMascotRecord(imageName: mascotRecord.imageName, recordingURL: mascotRecord.recordingURL, transcriptionText: mascotRecord.transcriptionText, summary: mascotRecord.summary, adviceText: mascotRecord.adviceText)
+                        self.mascotData.addMascotRecord(
+                            imageName: "1", // 初期画像
+                            recordingURL: recordingURL,
+                            transcriptionText: transcriptionText,
+                            summary: "感情分析中...", // 初期要約
+                            adviceText: "アドバイスを生成中..." // 初期アドバイス
+                        )
                     }
 
                     // Geminiによる感情分析とデータ更新
@@ -126,6 +122,9 @@ struct RecordingView: View {
                     self.isPresented = false
                 }
             }
+        } else {
+            // 録音URLがない場合も画面を閉じる
+            self.isPresented = false
         }
     }
 }
