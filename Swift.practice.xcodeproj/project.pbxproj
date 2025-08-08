@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		E90EE1C42E431A6600D5758F /* GoogleGenerativeAI in Frameworks */ = {isa = PBXBuildFile; productRef = E90EE1C32E431A6600D5758F /* GoogleGenerativeAI */; };
 		E90EE1D32E44E51000D5758F /* SwiftUICalendar in Frameworks */ = {isa = PBXBuildFile; productRef = E90EE1D22E44E51000D5758F /* SwiftUICalendar */; };
+		E90EE1E52E44E52000D5758F /* DGCharts in Frameworks */ = {isa = PBXBuildFile; productRef = E90EE1E62E44E52000D5758F /* DGCharts */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -59,6 +60,7 @@
 			files = (
 				E90EE1D32E44E51000D5758F /* SwiftUICalendar in Frameworks */,
 				E90EE1C42E431A6600D5758F /* GoogleGenerativeAI in Frameworks */,
+				E90EE1E52E44E52000D5758F /* DGCharts in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -215,6 +217,7 @@
 			packageReferences = (
 				E90EE1B72E4310A400D5758F /* XCRemoteSwiftPackageReference "generative-ai-swift" */,
 				E90EE1CE2E44E42700D5758F /* XCRemoteSwiftPackageReference "SwiftUICalendar" */,
+				E90EE1E42E44E52000D5758F /* XCRemoteSwiftPackageReference "DGCharts" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E9E48F682E345A6000011F60 /* Products */;
@@ -416,7 +419,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = T494LL66WY;
+				DEVELOPMENT_TEAM = 922N7TF68N;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "このアプリは音声を録音するためにマイクを使用します。";
@@ -431,7 +434,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "one.Swift-practice";
+				PRODUCT_BUNDLE_IDENTIFIER = com.erika.onseinikki;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -446,7 +449,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = T494LL66WY;
+				DEVELOPMENT_TEAM = 922N7TF68N;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "このアプリは音声を録音するためにマイクを使用します。";
@@ -461,7 +464,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "one.Swift-practice";
+				PRODUCT_BUNDLE_IDENTIFIER = com.erika.onseinikki;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -599,6 +602,14 @@
 				minimumVersion = 0.1.14;
 			};
 		};
+		E90EE1E42E44E52000D5758F /* XCRemoteSwiftPackageReference "DGCharts" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/danielgindi/Charts";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.1.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -611,6 +622,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = E90EE1CE2E44E42700D5758F /* XCRemoteSwiftPackageReference "SwiftUICalendar" */;
 			productName = SwiftUICalendar;
+		};
+		E90EE1E62E44E52000D5758F /* DGCharts */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E90EE1E42E44E52000D5758F /* XCRemoteSwiftPackageReference "DGCharts" */;
+			productName = DGCharts;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

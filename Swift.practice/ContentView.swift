@@ -43,6 +43,12 @@ struct ContentView: View {
                         Label(NavigationTab.tutorial.displayName, systemImage: NavigationTab.tutorial.symbolName)
                     }
                     .tag(NavigationTab.tutorial)
+                
+                EmotionChartSwiftUIView(dataModel: mascotData)
+                    .tabItem {
+                        Label(NavigationTab.chart.displayName, systemImage: NavigationTab.chart.symbolName)
+                    }
+                    .tag(NavigationTab.chart)
             }
             .accentColor(.blue)
             // 修正: MascotDataModelの最新カードIDが更新されたらスクロールをトリガー
