@@ -90,10 +90,14 @@ struct RecordingView: View {
     private func stopRecordingAndProcess() {
         audioRecorder.stopRecording()
         
+        // 修正: 録音停止後、すぐに画面を閉じる
+        self.isPresented = false
+        
         if let recordingURL = audioRecorder.recordingURL {
             print("録音ファイルのURL: \(recordingURL)")
             print("録音ファイルのパス: \(recordingURL.path)")
             
+            // 修正: 画面を閉じた後、バックグラウンドで処理を実行
             Task {
                 let authorized = await speechRecognizer.requestAuthorization()
                 if authorized {
@@ -116,15 +120,7 @@ struct RecordingView: View {
                     // Geminiによる感情分析とデータ更新
                     await mascotData.updateMascotTranscription(for: recordingURL, transcriptionText: transcriptionText)
                 }
-                
-                // 録音処理が完了したら画面を閉じる
-                DispatchQueue.main.async {
-                    self.isPresented = false
-                }
             }
-        } else {
-            // 録音URLがない場合も画面を閉じる
-            self.isPresented = false
         }
     }
 }
