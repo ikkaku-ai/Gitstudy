@@ -24,8 +24,11 @@ struct MascotRecord: Identifiable, Equatable, Codable {
 }
 
 // Gemini APIからのレスポンスをデコードするための構造体
-struct GeminiCommentResponse: Codable {
-    let comment: String
+struct GeminiResponse: Codable {
+    let score: Int
+    let emotion: String
+    let summary: String
+    let advice: String
 }
 
 // MARK: - MascotDataModelの定義
@@ -103,9 +106,9 @@ class MascotDataModel: ObservableObject {
     }
 
     func updateMascotTranscription(for recordingURL: URL, transcriptionText: String) async {
-        let number = generateNumber(from: transcriptionText)
-        let summary = generateSummary(from: transcriptionText, number: number)
-        let imageName = self.imageName(for: number) ?? "1"
+        // Geminiで感情分析
+        let geminiResult = await analyzeWithGemini(from: transcriptionText)
+        let imageName = self.imageName(for: geminiResult.score) ?? "1"
         
         DispatchQueue.main.async {
             // 修正: ファイル名で一致するレコードを検索
@@ -117,30 +120,15 @@ class MascotDataModel: ObservableObject {
                     recordingFilename: existingRecord.recordingFilename,
                     transcriptionText: transcriptionText,
                     recordingDate: existingRecord.recordingDate,
-                    summary: summary,
-                    adviceText: "コメントを生成中..."
+                    summary: geminiResult.summary,
+                    adviceText: geminiResult.advice
                 )
                 self.mascotRecords[index] = updatedRecord
-            }
-        }
-        
-        let comment = await generateCommentWithGemini(from: transcriptionText, emotionSummary: summary, emotionNumber: number)
-        
-        DispatchQueue.main.async {
-            // 修正: ファイル名で一致するレコードを検索
-            if let index = self.mascotRecords.firstIndex(where: { $0.recordingFilename == recordingURL.lastPathComponent }) {
-                let existingRecord = self.mascotRecords[index]
-                let updatedRecord = MascotRecord(
-                    imageName: existingRecord.imageName,
-                    displayCount: existingRecord.displayCount,
-                    recordingFilename: existingRecord.recordingFilename,
-                    transcriptionText: existingRecord.transcriptionText,
-                    recordingDate: existingRecord.recordingDate,
-                    summary: existingRecord.summary,
-                    adviceText: comment
-                )
-                self.mascotRecords[index] = updatedRecord
-                print("✅ コメントがGeminiで更新されました: \(comment)")
+                print("✅ Geminiで分析が完了しました:")
+                print("  スコア: \(geminiResult.score)")
+                print("  感情: \(geminiResult.emotion)")
+                print("  要約: \(geminiResult.summary)")
+                print("  アドバイス: \(geminiResult.advice)")
                 
                 self.latestRecordID = updatedRecord.id
             }
@@ -204,46 +192,70 @@ class MascotDataModel: ObservableObject {
         return fallbackComments[key]?.randomElement() ?? "うん、わかるよ。"
     }
 
-    private func generateCommentWithGemini(from text: String, emotionSummary: String, emotionNumber: Int) async -> String {
+    private func analyzeWithGemini(from text: String) async -> (score: Int, emotion: String, summary: String, advice: String) {
         let prompt = """
-        ユーザーから「\(text)」という音声入力がありました。この入力は「\(emotionSummary)」という感情と判断されました。
-        この感情とテキストの内容に基づき、親しみやすい対話形式で、一言の感想や共感を示すセリフを50文字以内で作成してください。
-        ただし、「うんうん、そうだね」という表現は使わないでください。
-
-        例1（喜び）: ユーザー「今日、テストで満点取れたんだ！」 → 返答「すごい！努力が報われたね、よかった！」
-        例2（悲しみ）: ユーザー「最近元気が出ないんだ...」 → 返答「そっか、辛かったね。無理しないでね。」
-        例3（不満）: ユーザー「また上司に怒られちゃった」 → 返答「それはひどいね...何かあったら聞くよ。」
-
-        JSON形式で'{ "comment": "すごい！努力が報われたね、よかった！" }'のように返してください。
+        以下はある人の音声日記の文字起こしです。
+        
+        「\(text)」
+        
+        この内容を分析し、以下の4つの情報をそれぞれ出力してください。
+        
+        出力は必ず **以下のJSON形式** で行ってください。
+        
+        - "score": 1〜100の整数で、その日記の感情のポジティブ度合い（高いほどポジティブ）
+        - "emotion": 一言で表す感情ラベル（例：「嬉しい」「悲しい」「不安」「怒り」「やる気」「疲れた」など）
+        - "summary": 3行以内で要約
+        - "advice": 日記の内容をふまえたアドバイスや励ましの言葉（1〜2文）
+        
+        【出力形式】
+        {
+          "score": 87,
+          "emotion": "嬉しい",
+          "summary": "今日は友達とカフェに行き、楽しい時間を過ごした。久しぶりに笑ってリフレッシュできた。",
+          "advice": "その素敵な時間を大切にしてください。心が元気なときは、周囲にも良い影響を与えられますよ！"
+        }
         """
         
         do {
-            print("▶️ Geminiへのコメント生成リクエストを開始します。")
-            print("プロンプト内容:\n\(prompt)")
+            print("▶️ Geminiへの感情分析リクエストを開始します。")
             
             let response = try await geminiModel.generateContent(prompt)
 
             guard let responseText = response.text else {
                 print("❌ Geminiからのレスポンスにテキストが含まれていませんでした。")
-                return getFallbackComment(for: emotionNumber)
+                return getFallbackResult(from: text)
             }
             
             print("✅ Geminiからの生のレスポンス:\n\(responseText)")
+            
+            // JSON部分だけを抽出（```jsonや余計な文字を除去）
+            let cleanedText = responseText
+                .replacingOccurrences(of: "```json", with: "")
+                .replacingOccurrences(of: "```", with: "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
 
-            guard let data = responseText.data(using: .utf8) else {
+            guard let data = cleanedText.data(using: .utf8) else {
                 print("❌ Geminiからのレスポンスをデータに変換できませんでした。")
-                return getFallbackComment(for: emotionNumber)
+                return getFallbackResult(from: text)
             }
             
             let decoder = JSONDecoder()
-            let result = try decoder.decode(GeminiCommentResponse.self, from: data)
-            return result.comment
+            let result = try decoder.decode(GeminiResponse.self, from: data)
+            return (score: result.score, emotion: result.emotion, summary: result.summary, advice: result.advice)
             
         } catch {
-            print("❌ Gemini APIコメント生成エラーが発生しました。")
+            print("❌ Gemini API分析エラーが発生しました。")
             print("エラーの詳細: \(error)")
-            return getFallbackComment(for: emotionNumber)
+            return getFallbackResult(from: text)
         }
+    }
+    
+    private func getFallbackResult(from text: String) -> (score: Int, emotion: String, summary: String, advice: String) {
+        let score = generateNumber(from: text)
+        let emotion = generateSummary(from: text, number: score)
+        let advice = getFallbackComment(for: score)
+        let summary = "感情分析に基づいた要約"
+        return (score: score, emotion: emotion, summary: summary, advice: advice)
     }
 
     private func imageName(for number: Int) -> String? {
