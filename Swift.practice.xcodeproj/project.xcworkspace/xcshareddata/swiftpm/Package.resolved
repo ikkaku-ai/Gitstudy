@@ -1,6 +1,15 @@
 {
-  "originHash" : "d93386082d1c7695b81396a486e254118d4fa9e788e58cd9ebe803ba527aba86",
+  "originHash" : "1b163e431ac58573e1148685aa7e7ea303d24f9ef702bbb90df5787248d3a7a9",
   "pins" : [
+    {
+      "identity" : "charts",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/danielgindi/Charts",
+      "state" : {
+        "revision" : "dd9c72e3d7e751e769971092a6bd72d39198ae63",
+        "version" : "5.1.0"
+      }
+    },
     {
       "identity" : "generative-ai-swift",
       "kind" : "remoteSourceControl",
