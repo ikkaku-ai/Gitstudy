@@ -116,3 +116,5 @@ struct RecordingCard: View {
         return formatter.string(from: date)
     }
 }
+
+//実験
