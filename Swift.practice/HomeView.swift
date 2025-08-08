@@ -1,86 +1,162 @@
 import SwiftUI
-import SwiftUICalendar // SwiftUICalendarをインポート
+import SwiftUICalendar
 
 struct HomeView: View {
     @EnvironmentObject var mascotData: MascotDataModel
     @EnvironmentObject var audioRecorder: AudioRecorder
     @EnvironmentObject var speechRecognizer: SpeechRecognizer
     
-    // ContentViewからスクロール先のIDを受け取るためのバインディング
     @Binding var scrollToID: UUID?
     
     var body: some View {
         NavigationView {
             ZStack {
-                Color(red: 0.8, green: 0.95, blue: 1.0).edgesIgnoringSafeArea(.all)
+                // 背景色
+                LinearGradient(
+                    gradient: Gradient(colors: [
+                        Color(red: 0.85, green: 0.95, blue: 1.0),
+                        Color(red: 0.95, green: 0.98, blue: 1.0)
+                    ]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .edgesIgnoringSafeArea(.all)
                 
-                VStack(spacing: 0) {
-                    if mascotData.mascotRecords.isEmpty {
-                        VStack(spacing: 20) {
-                            Image(systemName: "mic.circle.fill")
-                                .font(.system(size: 80))
-                                .foregroundColor(.gray.opacity(0.5))
-                            
-                            Text("録音ボタンから音声を録音してみましょう")
-                                .font(.headline)
-                                .foregroundColor(.gray)
-                        }
-                        .frame(maxHeight: .infinity)
-                    } else {
-                        // 録音カードの横スクロール
-                        VStack(alignment: .leading, spacing: 16) {
-                            HStack {
-                                Text("録音履歴")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(spacing: 0) {
+                        // 録音履歴セクション
+                        if mascotData.mascotRecords.isEmpty {
+                            // 空の状態の表示
+                            VStack(spacing: 20) {
+                                Image(systemName: "mic.circle.fill")
+                                    .font(.system(size: 80))
+                                    .foregroundColor(.gray.opacity(0.3))
                                 
-                                Spacer()
+                                Text("まだ録音がありません")
+                                    .font(.title3)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.gray)
                                 
-                                HStack(spacing: 4) {
-                                    Image(systemName: "arrow.left.arrow.right")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                    
-                                    Text("スワイプ")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                }
+                                Text("録音ボタンをタップして\n今日の気持ちを記録しましょう")
+                                    .font(.caption)
+                                    .multilineTextAlignment(.center)
+                                    .foregroundColor(.gray.opacity(0.7))
                             }
-                            .padding(.horizontal, 20)
-                            .padding(.top, 20)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 400)
+                            .padding(.top, 60)
                             
-                            ScrollViewReader { proxy in
-                                ScrollView(.horizontal, showsIndicators: true) {
-                                    HStack(spacing: 16) {
-                                        ForEach(mascotData.mascotRecords.reversed()) { mascotRecord in
-                                            RecordingCard(mascotRecord: mascotRecord)
-                                                .environmentObject(audioRecorder)
-                                                .environmentObject(mascotData)
-                                                .id(mascotRecord.id) // 各カードに一意のIDを設定
+                        } else {
+                            VStack(alignment: .leading, spacing: 0) {
+                                // 録音履歴ヘッダー
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("録音履歴")
+                                            .font(.title2)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(.primary)
+                                        
+                                        Text("\(mascotData.mascotRecords.count)件の記録")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    
+                                    Spacer()
+                                    
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "arrow.left.arrow.right")
+                                            .font(.system(size: 12))
+                                        Text("スワイプ")
+                                            .font(.caption)
+                                    }
+                                    .foregroundColor(.secondary)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 4)
+                                    .background(Color.gray.opacity(0.1))
+                                    .cornerRadius(12)
+                                }
+                                .padding(.horizontal, 20)
+                                .padding(.top, 20)
+                                .padding(.bottom, 16)
+                                
+                                // 録音カードの横スクロール
+                                ScrollViewReader { proxy in
+                                    ScrollView(.horizontal, showsIndicators: false) {
+                                        HStack(spacing: 16) {
+                                            ForEach(mascotData.mascotRecords.reversed()) { mascotRecord in
+                                                RecordingCard(mascotRecord: mascotRecord)
+                                                    .environmentObject(audioRecorder)
+                                                    .environmentObject(mascotData)
+                                                    .id(mascotRecord.id)
+                                                    .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 4)
+                                            }
                                         }
+                                        .padding(.horizontal, 20)
+                                        .padding(.vertical, 8)
+                                    }
+                                    .frame(height: 320)
+                                    .onChange(of: scrollToID) { newID in
+                                        if let id = newID {
+                                            withAnimation(.easeInOut(duration: 0.3)) {
+                                                proxy.scrollTo(id, anchor: .center)
+                                                self.scrollToID = nil
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                // セクション区切り線
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.1))
+                                    .frame(height: 1)
+                                    .padding(.horizontal, 20)
+                                    .padding(.vertical, 20)
+                                
+                                // 感情グラフセクション
+                                VStack(alignment: .leading, spacing: 16) {
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("感情の推移")
+                                                .font(.title2)
+                                                .fontWeight(.bold)
+                                                .foregroundColor(.primary)
+                                            
+                                            Text("Gemini AIによる分析")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                        
+                                        Spacer()
                                     }
                                     .padding(.horizontal, 20)
-                                    .padding(.bottom, 10)
-                                }
-                                .frame(height: 320)
-                                .onChange(of: scrollToID) { newID in
-                                    if let id = newID {
-                                        withAnimation {
-                                            // 該当IDのカードまでスクロール
-                                            proxy.scrollTo(id, anchor: .leading)
-                                            self.scrollToID = nil // スクロール後、IDをリセット
-                                        }
+                                    
+                                    // グラフコンテナ
+                                    VStack {
+                                        EmotionChartSwiftUIView(dataModel: mascotData)
                                     }
+                                    .background(Color.white)
+                                    .cornerRadius(16)
+                                    .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: 4)
+                                    .padding(.horizontal, 20)
+                                    .frame(height: 420)
                                 }
+                                .padding(.bottom, 100) // 録音ボタン用の余白
                             }
                         }
-                        
-                        Spacer()
                     }
                 }
             }
             .navigationTitle("ホーム")
             .navigationBarTitleDisplayMode(.large)
         }
+    }
+}
+
+struct HomeView_Previews: PreviewProvider {
+    static var previews: some View {
+        HomeView(scrollToID: .constant(nil))
+            .environmentObject(MascotDataModel())
+            .environmentObject(AudioRecorder())
+            .environmentObject(SpeechRecognizer())
     }
 }

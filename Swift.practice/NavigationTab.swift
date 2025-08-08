@@ -6,7 +6,6 @@ enum NavigationTab: String, CaseIterable {
     case home = "Home"
     case tutorial = "Tutorial"
     case calendar = "Calendar" // 新しいタブを追加
-    case chart = "Chart" // グラフタブを追加
     
     var symbolName: String {
         switch self {
@@ -16,8 +15,6 @@ enum NavigationTab: String, CaseIterable {
             return "book.fill"
         case .calendar:
             return "calendar" // カレンダーのアイコン
-        case .chart:
-            return "chart.line.uptrend.xyaxis" // グラフのアイコン
         }
     }
     
@@ -29,8 +26,6 @@ enum NavigationTab: String, CaseIterable {
             return "チュートリアル"
         case .calendar:
             return "カレンダー" // タブに表示する名前
-        case .chart:
-            return "グラフ" // タブに表示する名前
         }
     }
 }
