@@ -1,15 +1,18 @@
+// MARK: - RecordingView.swift
+
 import SwiftUI
 import AVFoundation
 import Speech
 
 struct RecordingView: View {
     @Binding var isPresented: Bool
-    @State private var showRecordingAlert = false
-
+    
     @EnvironmentObject var mascotData: MascotDataModel
     @EnvironmentObject var audioRecorder: AudioRecorder
     @EnvironmentObject var speechRecognizer: SpeechRecognizer
     
+    @State private var isProcessing = false
+
     var body: some View {
         NavigationView {
             ZStack {
@@ -36,6 +39,9 @@ struct RecordingView: View {
                                 .padding(.horizontal, 40)
                         }
                         .padding(.bottom, 100)
+                    } else if isProcessing {
+                        ProgressView("文字起こし中...")
+                            .padding()
                     } else {
                         VStack(spacing: 20) {
                             Image(systemName: "mic.circle")
@@ -54,7 +60,7 @@ struct RecordingView: View {
                         if audioRecorder.isRecording {
                             stopRecordingAndProcess()
                         } else {
-                            showRecordingAlert = true
+                            startRecording()
                         }
                     }) {
                         ZStack {
@@ -73,53 +79,66 @@ struct RecordingView: View {
             }
             .navigationTitle("録音")
             .navigationBarTitleDisplayMode(.large)
-            .alert("録音を開始しますか？", isPresented: $showRecordingAlert) {
-                Button("キャンセル", role: .cancel) {
-                    showRecordingAlert = false
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("キャンセル") {
+                        if audioRecorder.isRecording {
+                            audioRecorder.stopRecording()
+                            speechRecognizer.cancelRecognition()
+                        }
+                        isPresented = false
+                    }
                 }
-                Button("録音開始") {
-                    audioRecorder.startRecording()
-                    showRecordingAlert = false
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("完了") {
+                        isPresented = false
+                    }
+                    .disabled(speechRecognizer.transcriptionResult.isEmpty || isProcessing)
                 }
-            } message: {
-                Text("録音をすると記録に残ります。")
             }
         }
     }
     
+    private func startRecording() {
+        // 修正: speechRecognizer.reset() を削除
+        audioRecorder.startRecording()
+        speechRecognizer.startRecognition()
+    }
+    
     private func stopRecordingAndProcess() {
         audioRecorder.stopRecording()
+        speechRecognizer.cancelRecognition()
         
-        // 修正: 録音停止後、すぐに画面を閉じる
-        self.isPresented = false
+        guard let url = audioRecorder.lastRecordingURL else {
+            print("❌ Recording URL is missing.")
+            return
+        }
         
-        if let recordingURL = audioRecorder.recordingURL {
-            print("録音ファイルのURL: \(recordingURL)")
-            print("録音ファイルのパス: \(recordingURL.path)")
+        isProcessing = true
+        
+        Task {
+            await speechRecognizer.transcribeAudio(from: url)
             
-            // 修正: 画面を閉じた後、バックグラウンドで処理を実行
-            Task {
-                let authorized = await speechRecognizer.requestAuthorization()
-                if authorized {
-                    await speechRecognizer.transcribeAudio(from: recordingURL)
-                    
-                    let transcriptionText = speechRecognizer.transcriptionResult.isEmpty ?
-                    "文字起こしできませんでした" : speechRecognizer.transcriptionResult
-                    
-                    // 録音データ追加
-                    DispatchQueue.main.async {
-                        self.mascotData.addMascotRecord(
-                            imageName: "1", // 初期画像
-                            recordingURL: recordingURL,
-                            transcriptionText: transcriptionText,
-                            summary: "感情分析中...", // 初期要約
-                            adviceText: "アドバイスを生成中..." // 初期アドバイス
-                        )
-                    }
-
-                    // Geminiによる感情分析とデータ更新
-                    await mascotData.updateMascotTranscription(for: recordingURL, transcriptionText: transcriptionText)
+            let transcriptionText = speechRecognizer.transcriptionResult
+            
+            if !transcriptionText.isEmpty {
+                DispatchQueue.main.async {
+                    self.mascotData.addMascotRecord(
+                        imageName: "1",
+                        recordingURL: url,
+                        transcriptionText: transcriptionText,
+                        summary: "感情分析中...",
+                        adviceText: "アドバイスを生成中..."
+                    )
                 }
+                await self.mascotData.updateMascotTranscription(for: url, transcriptionText: transcriptionText)
+            } else {
+                print("⚠️ Transcription failed or was empty.")
+            }
+            
+            DispatchQueue.main.async {
+                self.isProcessing = false
+                self.isPresented = false
             }
         }
     }

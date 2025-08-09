@@ -32,6 +32,13 @@ struct TutorialView: View {
                             description: "カレンダーの日付を押すと、その日の一番古いカードに飛ぶ。"
                         )
                         
+                        // 修正: 変声機能のチュートリアルを追加
+                        TutorialSection(
+                            icon: "waveform.circle.fill",
+                            title: "変声機能",
+                            description: "変声タブで録音した音声を、スライダーを使ってピッチ（音の高さ）を変えて再生できます。日々の記録には影響しません。"
+                        )
+                        
                         Spacer(minLength: 50)
                     }
                     .padding(.horizontal, 20)

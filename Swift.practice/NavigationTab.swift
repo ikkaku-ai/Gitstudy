@@ -5,7 +5,8 @@ import SwiftUI
 enum NavigationTab: String, CaseIterable {
     case home = "Home"
     case tutorial = "Tutorial"
-    case calendar = "Calendar" // 新しいタブを追加
+    case calendar = "Calendar"
+    case voiceChanger = "VoiceChanger" // 新しいタブを追加
     
     var symbolName: String {
         switch self {
@@ -14,7 +15,9 @@ enum NavigationTab: String, CaseIterable {
         case .tutorial:
             return "book.fill"
         case .calendar:
-            return "calendar" // カレンダーのアイコン
+            return "calendar"
+        case .voiceChanger:
+            return "waveform.circle.fill"
         }
     }
     
@@ -25,7 +28,9 @@ enum NavigationTab: String, CaseIterable {
         case .tutorial:
             return "チュートリアル"
         case .calendar:
-            return "カレンダー" // タブに表示する名前
+            return "カレンダー"
+        case .voiceChanger:
+            return "変声" // タブに表示する名前
         }
     }
 }

@@ -1,10 +1,15 @@
 import SwiftUI
+import AVFoundation
 
 struct RecordingCard: View {
     let mascotRecord: MascotRecord
-    @EnvironmentObject var audioRecorder: AudioRecorder
     @EnvironmentObject var mascotData: MascotDataModel
-    @State private var isPlaying = false
+    // MARK: - ここが修正点
+    // AudioRecorderではなく、アプリ全体で共有するAudioPlayerManagerを使用
+    @EnvironmentObject var audioPlayerManager: AudioPlayerManager
+    // 変声設定を読み取るためのVoicePitchModelを追加
+    @EnvironmentObject var voicePitchModel: VoicePitchModel
+    
     @State private var showDeleteConfirmation = false
 
     var body: some View {
@@ -37,10 +42,14 @@ struct RecordingCard: View {
                 // 再生ボタン
                 Button(action: {
                     if let url = mascotRecord.recordingURL {
-                        if audioRecorder.isPlaying {
-                            audioRecorder.stopPlaying()
+                        if audioPlayerManager.isPlaying {
+                            audioPlayerManager.stop()
                         } else {
-                            audioRecorder.playRecording(from: url)
+                            audioPlayerManager.loadAudio(url: url)
+                            // MARK: - ここが修正点
+                            // VoicePitchModelからカスタムピッチを適用
+                            audioPlayerManager.setPitch(voicePitchModel.customPitch)
+                            audioPlayerManager.play()
                         }
                     }
                 }) {
@@ -49,12 +58,16 @@ struct RecordingCard: View {
                             .fill(Color.blue)
                             .frame(width: 70, height: 70)
 
-                        Image(systemName: audioRecorder.isPlaying ? "stop.fill" : "play.fill")
+                        Image(systemName: audioPlayerManager.isPlaying ? "stop.fill" : "play.fill")
                             .font(.system(size: 28))
                             .foregroundColor(.white)
                     }
                 }
                 .shadow(color: .blue.opacity(0.3), radius: 8, x: 0, y: 4)
+            }
+            .onDisappear {
+                // ビューが非表示になったら再生を停止
+                audioPlayerManager.stop()
             }
 
             Divider()
@@ -116,5 +129,3 @@ struct RecordingCard: View {
         return formatter.string(from: date)
     }
 }
-
-//実験
