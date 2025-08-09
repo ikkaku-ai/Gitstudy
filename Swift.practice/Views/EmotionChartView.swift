@@ -47,7 +47,9 @@ class LineChartViewController: UIViewController {
         leftAxis.labelTextColor = UIColor.label
         
         chartView.xAxis.labelTextColor = UIColor.label
-        chartView.xAxis.valueFormatter = DateValueFormatter()
+        // 修正前: 初期化時に空のデータでformatterが作られる
+        // chartView.xAxis.valueFormatter = IndexToDateValueFormatter(data: emotionData)
+        
         chartView.xAxis.granularity = 1
         chartView.xAxis.labelRotationAngle = -45
         
@@ -69,6 +71,9 @@ class LineChartViewController: UIViewController {
             return
         }
         
+        // 修正: データが更新されるたびにformatterを再作成
+        chartView.xAxis.valueFormatter = IndexToDateValueFormatter(data: emotionData)
+
         let entries = emotionData.enumerated().map { index, data in
             ChartDataEntry(x: Double(index), y: Double(data.score))
         }
@@ -115,26 +120,31 @@ class LineChartViewController: UIViewController {
     }
 }
 
-class DateValueFormatter: NSObject, AxisValueFormatter {
+class IndexToDateValueFormatter: NSObject, AxisValueFormatter {
     private let dateFormatter = DateFormatter()
+    private let data: [EmotionData]
     
-    override init() {
+    init(data: [EmotionData]) {
+        self.data = data
         super.init()
         dateFormatter.dateFormat = "MM/dd"
     }
     
     func stringForValue(_ value: Double, axis: AxisBase?) -> String {
-        let calendar = Calendar.current
-        let today = Date()
-        let daysAgo = Int(value)
-        
-        if let date = calendar.date(byAdding: .day, value: -daysAgo, to: today) {
-            return dateFormatter.string(from: date)
+        let index = Int(value)
+        guard index >= 0 && index < data.count else {
+            return ""
         }
-        return ""
+        
+        if index > 0 && Calendar.current.isDate(data[index].date, equalTo: data[index - 1].date, toGranularity: .day) {
+            return ""
+        }
+        
+        return dateFormatter.string(from: data[index].date)
     }
 }
 
+// 修正なし
 struct EmotionChartSwiftUIView: View {
     @ObservedObject var dataModel: MascotDataModel
     @State private var selectedPeriod: ChartPeriod = .week
@@ -159,13 +169,14 @@ struct EmotionChartSwiftUIView: View {
         let allData = dataModel.mascotRecords.toEmotionData()
         
         guard let days = selectedPeriod.days else {
-            return allData
+            return allData.sorted { $0.date < $1.date }
         }
         
         let calendar = Calendar.current
-        let startDate = calendar.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+        let today = calendar.startOfDay(for: Date())
+        let startDate = calendar.date(byAdding: .day, value: -days + 1, to: today) ?? Date()
         
-        return allData.filter { $0.date >= startDate }
+        return allData.filter { $0.date >= startDate }.sorted { $0.date < $1.date }
     }
     
     var body: some View {
