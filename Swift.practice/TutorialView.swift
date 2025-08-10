@@ -29,14 +29,14 @@ struct TutorialView: View {
                         TutorialSection(
                             icon: "square.grid.2x2.fill",
                             title: "検索",
-                            description: "カレンダーの日付を押すと、その日の一番古いカードに飛ぶ。"
+                            description: "カレンダーの日付を押すと、その日の一番古いカードに飛びます。"
                         )
                         
                         // 修正: 変声機能のチュートリアルを追加
                         TutorialSection(
                             icon: "waveform.circle.fill",
-                            title: "変声機能",
-                            description: "変声タブで録音した音声を、スライダーを使ってピッチ（音の高さ）を変えて再生できます。日々の記録には影響しません。"
+                            title: "変声",
+                            description: "自分が録音した声の高さを変えることができます。指で高さを調整して再生ボタンを押してみましょう！ホームの再生ボタンからも聞けます！"
                         )
                         
                         Spacer(minLength: 50)

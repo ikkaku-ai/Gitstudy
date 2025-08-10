@@ -15,8 +15,6 @@ struct ContentView: View {
     @State private var selectedDateForScroll: YearMonthDay?
     @State private var scrollToID: UUID?
     
-    private var backgroundColor: Color = Color(red: 247/255, green: 247/255, blue: 247/255)
-    
     var body: some View {
         ZStack {
             TabView(selection: $selectedTab) {
@@ -30,7 +28,6 @@ struct ContentView: View {
                     .environmentObject(speechRecognizer)
                     .environmentObject(voicePitchModel)
                     .environmentObject(audioPlayerManager)
-                    .background(backgroundColor)
                 
                 CalendarTabView(selectedDate: $selectedDateForScroll)
                     .tabItem {
@@ -38,8 +35,7 @@ struct ContentView: View {
                     }
                     .tag(NavigationTab.calendar)
                     .environmentObject(mascotData)
-                    .background(backgroundColor)
-                
+
                 VocalPitchView()
                     .tabItem {
                         Label(NavigationTab.voiceChanger.displayName, systemImage: NavigationTab.voiceChanger.symbolName)
@@ -48,14 +44,13 @@ struct ContentView: View {
                     .environmentObject(voicePitchModel)
                     .environmentObject(audioPlayerManager)
                     .environmentObject(mascotData)
-                    .background(backgroundColor)
+                    .environmentObject(audioRecorder) // ここが重要
                 
                 TutorialView()
                     .tabItem {
                         Label(NavigationTab.tutorial.displayName, systemImage: NavigationTab.tutorial.symbolName)
                     }
                     .tag(NavigationTab.tutorial)
-                    .background(backgroundColor)
             }
             .accentColor(.blue)
             .onChange(of: mascotData.latestRecordID) { newID in
