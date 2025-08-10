@@ -109,9 +109,9 @@ class LineChartViewController: UIViewController {
         case 76...100:
             return .systemGreen
         case 51...75:
-            return .systemBlue
+            return .systemYellow
         case 21...50:
-            return .systemOrange
+            return .systemBlue
         case 1...20:
             return .systemRed
         default:
@@ -226,8 +226,8 @@ struct EmotionChartSwiftUIView: View {
                     HStack(spacing: 16) {
                         ForEach([
                             (color: Color.green, label: "喜び (76-100)"),
-                            (color: Color.blue, label: "普通 (51-75)"),
-                            (color: Color.orange, label: "悲しみ (21-50)"),
+                            (color: Color.yellow, label: "普通 (51-75)"),
+                            (color: Color.blue, label: "悲しみ (21-50)"),
                             (color: Color.red, label: "怒り (1-20)")
                         ], id: \.label) { item in
                             HStack(spacing: 4) {
