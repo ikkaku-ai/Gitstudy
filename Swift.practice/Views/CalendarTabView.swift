@@ -38,15 +38,8 @@ struct CalendarTabView: View {
                     VStack(alignment: .center, spacing: 0) {
                         // スクロールボタンのセクション
                         HStack(spacing: 0) {
-                            Button("一年前へ") {
-                                controller.scrollTo(YearMonth(year: controller.yearMonth.year - 1, month: controller.yearMonth.month), isAnimate: true)
-                            }
-                            .font(.caption)
-                            
-                            Spacer()
-                            
-                            Button("半年前へ") {
-                                controller.scrollTo(controller.yearMonth.addMonth(value: -6), isAnimate: true)
+                            Button("先月へ") {
+                                controller.scrollTo(controller.yearMonth.addMonth(value: -1), isAnimate: true)
                             }
                             .font(.caption)
                             
@@ -59,15 +52,8 @@ struct CalendarTabView: View {
                             
                             Spacer()
                             
-                            Button("半年後へ") {
-                                controller.scrollTo(controller.yearMonth.addMonth(value: 6), isAnimate: true)
-                            }
-                            .font(.caption)
-                            
-                            Spacer()
-                            
-                            Button("一年後へ") {
-                                controller.scrollTo(YearMonth(year: controller.yearMonth.year + 1, month: controller.yearMonth.month), isAnimate: true)
+                            Button("来月へ") {
+                                controller.scrollTo(controller.yearMonth.addMonth(value: 1), isAnimate: true)
                             }
                             .font(.caption)
                         }
