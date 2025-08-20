@@ -1,5 +1,3 @@
-// MARK: - ContentView.swift
-
 import SwiftUI
 import SwiftUICalendar
 
@@ -14,6 +12,9 @@ struct ContentView: View {
     
     @State private var selectedDateForScroll: YearMonthDay?
     @State private var scrollToID: UUID?
+    
+    // MARK: チュートリアル表示を管理する状態変数
+    @State private var showTutorial = false
     
     var body: some View {
         ZStack {
@@ -44,13 +45,7 @@ struct ContentView: View {
                     .environmentObject(voicePitchModel)
                     .environmentObject(audioPlayerManager)
                     .environmentObject(mascotData)
-                    .environmentObject(audioRecorder) // ここが重要
-                
-                TutorialView()
-                    .tabItem {
-                        Label(NavigationTab.tutorial.displayName, systemImage: NavigationTab.tutorial.symbolName)
-                    }
-                    .tag(NavigationTab.tutorial)
+                    .environmentObject(audioRecorder)
             }
             .accentColor(.blue)
             .onChange(of: mascotData.latestRecordID) { newID in
@@ -87,5 +82,24 @@ struct ContentView: View {
                 self.selectedDateForScroll = nil
             }
         }
+        // MARK: アプリ起動時にチュートリアルを表示するロジック
+        .onAppear {
+            let hasShownTutorial = UserDefaults.standard.bool(forKey: "hasShownTutorial")
+            if mascotData.mascotRecords.isEmpty && !hasShownTutorial {
+                showTutorial = true
+                UserDefaults.standard.set(true, forKey: "hasShownTutorial")
+            }
+        }
+        // MARK: ポップアップとしてチュートリアルビューを表示
+        .sheet(isPresented: $showTutorial) {
+            TutorialView(isPresented: $showTutorial)
+        }
+    }
+}
+
+// MARK: - Preview
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
     }
 }
