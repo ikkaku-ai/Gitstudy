@@ -28,20 +28,24 @@ struct EmotionData: Identifiable {
         let imageName = record.imageName
         
         let baseScore: Int
+        let emotion: String
         switch imageName {
         case "4":
             baseScore = Int.random(in: 76...100)
+            emotion = "喜び"
         case "1":
             baseScore = Int.random(in: 51...75)
+            emotion = "普通"
         case "3":
             baseScore = Int.random(in: 21...50)
+            emotion = "悲しみ"
         case "2":
             baseScore = Int.random(in: 1...20)
+            emotion = "怒り"
         default:
             baseScore = 50
+            emotion = "不明"
         }
-        
-        let emotion = record.summary.isEmpty ? "感情不明" : record.summary
         
         return (score: baseScore, emotion: emotion)
     }
