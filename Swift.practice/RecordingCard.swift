@@ -71,7 +71,7 @@ struct RecordingCard: View {
             Image(mascotRecord.imageName)
                 .resizable()
                 .scaledToFit()
-                .frame(width: 60, height: 60)
+                .frame(width: 40, height: 40)
                 .padding(.top)
 
             // アドバイス (スクロール可能に修正)
@@ -83,7 +83,7 @@ struct RecordingCard: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
             }
-            .frame(height: 40) // 高さ調整
+            .frame(height: 60) // 高さ調整
             
             Spacer()
         }
