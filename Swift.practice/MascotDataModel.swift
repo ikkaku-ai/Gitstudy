@@ -130,7 +130,6 @@ class MascotDataModel: ObservableObject {
                 print("✅ Geminiで分析が完了しました:")
                 print("   スコア: \(geminiResult.score)")
                 print("   感情: \(geminiResult.emotion)")
-                print("   要約: \(geminiResult.summary)")
                 print("   アドバイス: \(geminiResult.advice)")
                 
                 self.latestRecordID = updatedRecord.id
