@@ -63,7 +63,7 @@ struct ContentView: View {
                     Spacer()
                     FloatingRecordButton(showRecordingView: $showRecordingView)
                         .padding(.trailing, 20)
-                        .padding(.bottom, 100)
+                        .padding(.bottom,60)
                 }
             }
         }

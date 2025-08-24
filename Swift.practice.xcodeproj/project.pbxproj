@@ -437,6 +437,7 @@
 				DEVELOPMENT_TEAM = T494LL66WY;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Moodsketch;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "このアプリは音声を録音するためにマイクを使用します。";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "このアプリは録音した音声を文字起こしするために音声認識を使用します。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -467,6 +468,7 @@
 				DEVELOPMENT_TEAM = T494LL66WY;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Moodsketch;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "このアプリは音声を録音するためにマイクを使用します。";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "このアプリは録音した音声を文字起こしするために音声認識を使用します。";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

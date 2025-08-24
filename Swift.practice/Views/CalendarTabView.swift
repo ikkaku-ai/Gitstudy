@@ -17,7 +17,8 @@ struct CalendarTabView: View {
         "怒り": .red,
         "悲しみ": .blue,
         "普通": .yellow,
-        "喜び": .green
+        "喜び": .green,
+        "不明": .gray
     ]
     
     var body: some View {
@@ -38,15 +39,8 @@ struct CalendarTabView: View {
                     VStack(alignment: .center, spacing: 0) {
                         // スクロールボタンのセクション
                         HStack(spacing: 0) {
-                            Button("一年前へ") {
-                                controller.scrollTo(YearMonth(year: controller.yearMonth.year - 1, month: controller.yearMonth.month), isAnimate: true)
-                            }
-                            .font(.caption)
-                            
-                            Spacer()
-                            
-                            Button("半年前へ") {
-                                controller.scrollTo(controller.yearMonth.addMonth(value: -6), isAnimate: true)
+                            Button("先月へ") {
+                                controller.scrollTo(controller.yearMonth.addMonth(value: -1), isAnimate: true)
                             }
                             .font(.caption)
                             
@@ -59,15 +53,8 @@ struct CalendarTabView: View {
                             
                             Spacer()
                             
-                            Button("半年後へ") {
-                                controller.scrollTo(controller.yearMonth.addMonth(value: 6), isAnimate: true)
-                            }
-                            .font(.caption)
-                            
-                            Spacer()
-                            
-                            Button("一年後へ") {
-                                controller.scrollTo(YearMonth(year: controller.yearMonth.year + 1, month: controller.yearMonth.month), isAnimate: true)
+                            Button("来月へ") {
+                                controller.scrollTo(controller.yearMonth.addMonth(value: 1), isAnimate: true)
                             }
                             .font(.caption)
                         }
@@ -109,32 +96,33 @@ struct CalendarTabView: View {
                                     
                                     Spacer(minLength: 4)
                                     
-                                    let records = mascotData.mascotRecords
-                                        .filter { isSameDay(date: $0.recordingDate, as: date) }
-                                        .sorted { $0.recordingDate < $1.recordingDate }
+                                    // 感情のドットを表示する部分を再追加
+                                    let emotionRecords = mascotData.mascotRecords
+                                        .toEmotionData() // MascotRecordをEmotionDataに変換
+                                        .filter { isSameDay(date: $0.date, as: date) }
+                                        .sorted { $0.date < $1.date }
                                     
-                                    if !records.isEmpty {
+                                    if !emotionRecords.isEmpty {
                                         HStack {
                                             Spacer()
                                             HStack(spacing: 2) {
-                                                ForEach(records.prefix(4), id: \.id) { record in
+                                                ForEach(emotionRecords.prefix(4), id: \.id) { record in
                                                     Circle()
-                                                        .fill(getColorForSummary(record.summary))
+                                                        .fill(getColorForEmotion(record.emotion))
                                                         .frame(width: 5, height: 5)
                                                 }
                                             }
                                             Spacer()
                                         }
-                                        
-                                        if records.count > 4 {
+                                        if emotionRecords.count > 4 {
                                             VStack(alignment: .trailing, spacing: 2) {
-                                                ForEach(0..<((records.count - 4) + 3) / 4, id: \.self) { row in
+                                                ForEach(0..<((emotionRecords.count - 4) + 3) / 4, id: \.self) { row in
                                                     HStack(spacing: 2) {
                                                         ForEach(0..<4, id: \.self) { col in
                                                             let index = 4 + row * 4 + col
-                                                            if index < records.count {
+                                                            if index < emotionRecords.count {
                                                                 Circle()
-                                                                    .fill(getColorForSummary(records[index].summary))
+                                                                    .fill(getColorForEmotion(emotionRecords[index].emotion))
                                                                     .frame(width: 5, height: 5)
                                                             } else {
                                                                 Circle()
@@ -147,6 +135,7 @@ struct CalendarTabView: View {
                                             }
                                         }
                                     }
+                                    
                                     Spacer()
                                 }
                                 .frame(width: geometry.size.width, height: geometry.size.height, alignment: .center)
@@ -180,17 +169,9 @@ struct CalendarTabView: View {
         }
     }
     
-    // 感情の要約に基づいて色を返すヘルパーメソッド
-    private func getColorForSummary(_ summary: String) -> Color {
-        if summary.contains("喜び") || summary.contains("楽しさ") {
-            return .green
-        } else if summary.contains("怒り") || summary.contains("不満") {
-            return .red
-        } else if summary.contains("悲しみ") || summary.contains("辛さ") {
-            return .blue
-        } else {
-            return .yellow
-        }
+    // 感情に基づいて色を返すヘルパーメソッドを再追加
+    private func getColorForEmotion(_ emotion: String) -> Color {
+        return emotionColors[emotion] ?? .gray
     }
     
     // DateとYearMonthDayが同じ日かどうかを判定するヘルパーメソッド

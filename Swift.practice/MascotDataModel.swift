@@ -1,3 +1,7 @@
+
+// MARK: - MascotDataModel.swift
+
+import SwiftUI
 import Foundation
 import GoogleGenerativeAI
 import SwiftUICalendar
@@ -11,7 +15,7 @@ struct MascotRecord: Identifiable, Equatable, Codable {
     var recordingFilename: String?
     var transcriptionText: String
     var recordingDate: Date
-    var summary: String
+    // var summary: String // この行を削除
     var adviceText: String = "" // コメントとして使用
     
     // 修正: ファイル名からURLを動的に生成するコンピューテッドプロパティ
@@ -26,7 +30,7 @@ struct MascotRecord: Identifiable, Equatable, Codable {
 struct GeminiResponse: Codable {
     let score: Int
     let emotion: String
-    let summary: String
+    // let summary: String // この行を削除
     let advice: String
 }
 
@@ -82,7 +86,7 @@ class MascotDataModel: ObservableObject {
         }
     }
 
-    func addMascotRecord(imageName: String, recordingURL: URL?, transcriptionText: String = "", summary: String = "", adviceText: String = "") {
+    func addMascotRecord(imageName: String, recordingURL: URL?, transcriptionText: String = "", adviceText: String = "") {
         let newRecord = MascotRecord(
             imageName: imageName,
             displayCount: mascotRecords.count + 1,
@@ -90,7 +94,7 @@ class MascotDataModel: ObservableObject {
             recordingFilename: recordingURL?.lastPathComponent,
             transcriptionText: transcriptionText,
             recordingDate: Date(),
-            summary: summary,
+            // summary: summary, // この行を削除
             adviceText: adviceText
         )
         mascotRecords.append(newRecord)
@@ -119,7 +123,7 @@ class MascotDataModel: ObservableObject {
                     recordingFilename: existingRecord.recordingFilename,
                     transcriptionText: transcriptionText,
                     recordingDate: existingRecord.recordingDate,
-                    summary: geminiResult.summary,
+                    // summary: geminiResult.summary, // この行を削除
                     adviceText: geminiResult.advice
                 )
                 self.mascotRecords[index] = updatedRecord
@@ -150,21 +154,6 @@ class MascotDataModel: ObservableObject {
         return oldestRecord?.id
     }
     
-    private func generateSummary(from text: String, number: Int) -> String {
-        switch number {
-        case 1...20:
-            return "怒りや不満"
-        case 21...50:
-            return "悲しみや辛さ"
-        case 51...75:
-            return "普通"
-        case 76...100:
-            return "喜びや楽しさ"
-        default:
-            return "感情不明"
-        }
-    }
-    
     private func generateNumber(from text: String) -> Int {
         let lowercasedText = text.lowercased()
         
@@ -191,26 +180,24 @@ class MascotDataModel: ObservableObject {
         return fallbackComments[key]?.randomElement() ?? "うん、わかるよ。"
     }
 
-    private func analyzeWithGemini(from text: String) async -> (score: Int, emotion: String, summary: String, advice: String) {
+    private func analyzeWithGemini(from text: String) async -> (score: Int, emotion: String, advice: String) {
         let prompt = """
         以下はある人の音声日記の文字起こしです。
         
         「\(text)」
         
-        この内容を分析し、以下の4つの情報をそれぞれ出力してください。
+        この内容を分析し、以下の3つの情報をそれぞれ出力してください。
         
         出力は必ず **以下のJSON形式** で行ってください。
         
         - "score": 1〜100の整数で、その日記の感情のポジティブ度合い（高いほどポジティブ）
         - "emotion": 一言で表す感情ラベル（例：「嬉しい」「悲しい」「不安」「怒り」「やる気」「疲れた」など）
-        - "summary": 3行以内で要約
-        - "advice": 日記の内容をふまえたアドバイスや励ましの言葉（1〜2文）
+        - "advice": 日記の内容をふまえたアドバイスや励ましの言葉（1文で簡潔に）
         
         【出力形式】
         {
           "score": 87,
           "emotion": "嬉しい",
-          "summary": "今日は友達とカフェに行き、楽しい時間を過ごした。久しぶりに笑ってリフレッシュできた。",
           "advice": "その素敵な時間を大切にしてください。心が元気なときは、周囲にも良い影響を与えられますよ！"
         }
         """
@@ -240,7 +227,7 @@ class MascotDataModel: ObservableObject {
             
             let decoder = JSONDecoder()
             let result = try decoder.decode(GeminiResponse.self, from: data)
-            return (score: result.score, emotion: result.emotion, summary: result.summary, advice: result.advice)
+            return (score: result.score, emotion: result.emotion, advice: result.advice)
             
         } catch {
             print("❌ Gemini API分析エラーが発生しました。")
@@ -249,12 +236,11 @@ class MascotDataModel: ObservableObject {
         }
     }
     
-    private func getFallbackResult(from text: String) -> (score: Int, emotion: String, summary: String, advice: String) {
+    private func getFallbackResult(from text: String) -> (score: Int, emotion: String, advice: String) {
         let score = generateNumber(from: text)
-        let emotion = generateSummary(from: text, number: score)
+        let emotion = getFallbackComment(for: score) // summaryを削除し、代わりにadviceを使用
         let advice = getFallbackComment(for: score)
-        let summary = "感情分析に基づいた要約"
-        return (score: score, emotion: emotion, summary: summary, advice: advice)
+        return (score: score, emotion: emotion, advice: advice)
     }
 
     private func imageName(for number: Int) -> String? {
