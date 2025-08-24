@@ -2,7 +2,7 @@ import SwiftUI
 
 struct FloatingRecordButton: View {
     @Binding var showRecordingView: Bool
-    @State private var isAnimating = false
+    // @State private var isAnimating = false // この行を削除
     
     var body: some View {
         Button(action: {
@@ -19,11 +19,11 @@ struct FloatingRecordButton: View {
                     .foregroundColor(.white)
             }
         }
-        .scaleEffect(isAnimating ? 1.1 : 1.0)
-        .onAppear {
-            withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
-                isAnimating = true
-            }
-        }
+        // .scaleEffect(isAnimating ? 1.1 : 1.0) // この行を削除
+        // .onAppear { // このブロック全体を削除
+        //     withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+        //         isAnimating = true
+        //     }
+        // }
     }
 }
