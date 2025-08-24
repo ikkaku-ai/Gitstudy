@@ -51,7 +51,7 @@ struct HomeView: View {
                                 // 録音履歴ヘッダー
                                 HStack {
                                     VStack(alignment: .leading, spacing: 4) {
-                                        Text("録音履歴")
+                                        Text("日記記録")
                                             .font(.title2)
                                             .fontWeight(.bold)
                                             .foregroundColor(.primary)

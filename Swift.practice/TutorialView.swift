@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct TutorialView: View {
+    @Binding var isPresented: Bool
+    
     var body: some View {
         NavigationView {
             ZStack {
@@ -47,6 +49,14 @@ struct TutorialView: View {
             }
             .navigationTitle("チュートリアル")
             .navigationBarTitleDisplayMode(.large)
+            // MARK: 閉じるボタンの追加
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("閉じる") {
+                        isPresented = false
+                    }
+                }
+            }
         }
     }
 }
@@ -75,5 +85,11 @@ struct TutorialSection: View {
             }
         }
         .padding(.vertical, 10)
+    }
+}
+
+struct TutorialView_Previews: PreviewProvider {
+    static var previews: some View {
+        TutorialView(isPresented: .constant(true))
     }
 }

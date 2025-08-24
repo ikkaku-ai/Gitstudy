@@ -1,3 +1,4 @@
+
 // MARK: - MascotDataModel.swift
 
 import SwiftUI
@@ -129,7 +130,7 @@ class MascotDataModel: ObservableObject {
                 print("✅ Geminiで分析が完了しました:")
                 print("   スコア: \(geminiResult.score)")
                 print("   感情: \(geminiResult.emotion)")
-                // print("   要約: \(geminiResult.summary)") // この行を削除
+                print("   要約: \(geminiResult.summary)")
                 print("   アドバイス: \(geminiResult.advice)")
                 
                 self.latestRecordID = updatedRecord.id
