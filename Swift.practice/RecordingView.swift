@@ -127,7 +127,7 @@ struct RecordingView: View {
                         imageName: "1",
                         recordingURL: url,
                         transcriptionText: transcriptionText,
-                        summary: "感情分析中...",
+                        // summary: "感情分析中...", // この行を削除
                         adviceText: "アドバイスを生成中..."
                     )
                 }
