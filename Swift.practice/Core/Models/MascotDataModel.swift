@@ -36,6 +36,8 @@ struct GeminiResponse: Codable {
 
 // MARK: - MascotDataModelの定義
 class MascotDataModel: ObservableObject {
+    static let shared = MascotDataModel()
+    
     @Published var mascotRecords: [MascotRecord] = [] {
         didSet {
             saveMascotRecords() // データが変更されるたびに自動保存

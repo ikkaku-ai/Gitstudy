@@ -11,7 +11,11 @@ struct RecordingView: View {
     @EnvironmentObject var audioRecorder: AudioRecorder
     @EnvironmentObject var speechRecognizer: SpeechRecognizer
     
-    @State private var isProcessing = false
+    @StateObject private var viewModel = RecordingViewModel()
+    
+    init(isPresented: Binding<Bool>) {
+        self._isPresented = isPresented
+    }
 
     var body: some View {
         NavigationView {
@@ -21,25 +25,25 @@ struct RecordingView: View {
                 VStack {
                     Spacer()
                     
-                    if audioRecorder.isRecording {
+                    if viewModel.isRecording {
                         VStack(spacing: 20) {
                             Image(systemName: "mic.fill")
                                 .font(.system(size: 60))
                                 .foregroundColor(.red)
-                                .scaleEffect(audioRecorder.isRecording ? 1.2 : 1.0)
-                                .animation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true), value: audioRecorder.isRecording)
+                                .scaleEffect(viewModel.isRecording ? 1.2 : 1.0)
+                                .animation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true), value: viewModel.isRecording)
                             
                             Text("録音中...")
                                 .font(.title2)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.red)
                             
-                            WaveformView(audioLevels: audioRecorder.audioLevels)
+                            WaveformView(audioLevels: viewModel.audioLevels)
                                 .frame(height: 100)
                                 .padding(.horizontal, 40)
                         }
                         .padding(.bottom, 100)
-                    } else if isProcessing {
+                    } else if viewModel.isProcessing {
                         ProgressView("文字起こし中...")
                             .padding()
                     } else {
@@ -57,18 +61,23 @@ struct RecordingView: View {
                     Spacer()
                     
                     Button(action: {
-                        if audioRecorder.isRecording {
-                            stopRecordingAndProcess()
+                        if viewModel.isRecording {
+                            Task {
+                                let success = await viewModel.stopRecordingAndProcess()
+                                if success {
+                                    isPresented = false
+                                }
+                            }
                         } else {
-                            startRecording()
+                            viewModel.startRecording()
                         }
                     }) {
                         ZStack {
                             Circle()
-                                .fill(audioRecorder.isRecording ? Color.red : Color.blue)
+                                .fill(viewModel.isRecording ? Color.red : Color.blue)
                                 .frame(width: 100, height: 100)
                             
-                            Image(systemName: audioRecorder.isRecording ? "stop.fill" : "mic.fill")
+                            Image(systemName: viewModel.isRecording ? "stop.fill" : "mic.fill")
                                 .font(.system(size: 40))
                                 .foregroundColor(.white)
                         }
@@ -82,10 +91,7 @@ struct RecordingView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("キャンセル") {
-                        if audioRecorder.isRecording {
-                            audioRecorder.stopRecording()
-                            speechRecognizer.cancelRecognition()
-                        }
+                        viewModel.cancelRecording()
                         isPresented = false
                     }
                 }
@@ -93,53 +99,21 @@ struct RecordingView: View {
                     Button("完了") {
                         isPresented = false
                     }
-                    .disabled(speechRecognizer.transcriptionResult.isEmpty || isProcessing)
+                    .disabled(!viewModel.canComplete)
                 }
             }
         }
-    }
-    
-    private func startRecording() {
-        // 修正: speechRecognizer.reset() を削除
-        audioRecorder.startRecording()
-        speechRecognizer.startRecognition()
-    }
-    
-    private func stopRecordingAndProcess() {
-        audioRecorder.stopRecording()
-        speechRecognizer.cancelRecognition()
-        
-        guard let url = audioRecorder.lastRecordingURL else {
-            print("❌ Recording URL is missing.")
-            return
+        .alert("エラー", isPresented: $viewModel.showError) {
+            Button("OK") {
+                viewModel.clearError()
+            }
+        } message: {
+            Text(viewModel.errorMessage ?? "不明なエラーが発生しました")
         }
-        
-        isProcessing = true
-        
-        Task {
-            await speechRecognizer.transcribeAudio(from: url)
-            
-            let transcriptionText = speechRecognizer.transcriptionResult
-            
-            if !transcriptionText.isEmpty {
-                DispatchQueue.main.async {
-                    self.mascotData.addMascotRecord(
-                        imageName: "1",
-                        recordingURL: url,
-                        transcriptionText: transcriptionText,
-                        // summary: "感情分析中...", // この行を削除
-                        adviceText: "アドバイスを生成中..."
-                    )
-                }
-                await self.mascotData.updateMascotTranscription(for: url, transcriptionText: transcriptionText)
-            } else {
-                print("⚠️ Transcription failed or was empty.")
-            }
-            
-            DispatchQueue.main.async {
-                self.isProcessing = false
-                self.isPresented = false
-            }
+        .onAppear {
+            viewModel.setup(audioRecorder: audioRecorder, 
+                           speechRecognizer: speechRecognizer, 
+                           mascotData: mascotData)
         }
     }
 }

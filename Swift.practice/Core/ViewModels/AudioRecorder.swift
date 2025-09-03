@@ -6,6 +6,8 @@ import Combine
 
 class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate {
     
+    static let shared = AudioRecorder()
+    
     @Published var isRecording = false
     @Published var audioLevels: [Float] = []
     
@@ -58,8 +60,10 @@ class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate {
             audioRecorder?.isMeteringEnabled = true
             audioRecorder?.record()
             
-            isRecording = true
-            audioLevels = [] // 録音開始時に波形データをリセット
+            DispatchQueue.main.async { [weak self] in
+                self?.isRecording = true
+                self?.audioLevels = [] // 録音開始時に波形データをリセット
+            }
             
             levelTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
                 self?.updateAudioLevels()
@@ -75,7 +79,10 @@ class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate {
         
         audioRecorder?.stop()
         levelTimer?.invalidate()
-        isRecording = false
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.isRecording = false
+        }
         
         if let url = audioRecorder?.url {
             lastRecordingURL = url
@@ -90,11 +97,16 @@ class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate {
         
         if let level = audioRecorder?.averagePower(forChannel: 0) {
             let normalizedLevel = min(1.0, max(0.0, (level + 50) / 50))
-            audioLevels.append(normalizedLevel)
             
-            if audioLevels.count > 40 { // 波形の長さを調整
-                audioLevels.removeFirst()
+            DispatchQueue.main.async { [weak self] in
+                self?.audioLevels.append(normalizedLevel)
+                
+                if self?.audioLevels.count ?? 0 > 40 { // 波形の長さを調整
+                    self?.audioLevels.removeFirst()
+                }
             }
+            
+            print("🎤 Audio level: \(normalizedLevel), Total levels: \(audioLevels.count)")
         }
     }
     
