@@ -4,9 +4,9 @@ import SwiftUICalendar
 struct ContentView: View {
     @State private var selectedTab: NavigationTab = .home
     @State private var showRecordingView = false
-    @StateObject private var mascotData = MascotDataModel()
-    @StateObject private var audioRecorder = AudioRecorder()
-    @StateObject private var speechRecognizer = SpeechRecognizer()
+    @StateObject private var mascotData = MascotDataModel.shared
+    @StateObject private var audioRecorder = AudioRecorder.shared
+    @StateObject private var speechRecognizer = SpeechRecognizer.shared
     @StateObject private var voicePitchModel = VoicePitchModel()
     @StateObject private var audioPlayerManager = AudioPlayerManager()
     

@@ -4,6 +4,8 @@ import AVFoundation
 
 @MainActor
 class SpeechRecognizer: ObservableObject {
+    static let shared = SpeechRecognizer()
+    
     private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "ja-JP"))
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask?
